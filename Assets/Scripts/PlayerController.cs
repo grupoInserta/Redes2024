@@ -13,6 +13,17 @@ public class PlayerController : MonoBehaviour
     private float mouseVertical = 0;
     private float mouseHorizontal = 0;
 
+
+
+    PlayerController controller;
+    Camera cam;
+
+    private void Awake()
+    {
+        controller = GetComponent<PlayerController>();
+        cam = Camera.main;
+    }
+
     private void Update()
     {
         Vector3 inputValues = Vector3.zero;
@@ -27,8 +38,14 @@ public class PlayerController : MonoBehaviour
 
         mouseVertical = Input.GetAxis("Mouse X");
         mouseHorizontal = Input.GetAxis("Mouse Y");
-        Vector2 MouseY += mouseVertical;
-        Vector2 MouseX += mouseHorizontal;
+        //Vector2 MouseY += mouseVertical;
+        //Vector2 MouseX += mouseHorizontal;
+
+
+        //El personaje tiene que rotar con respecto a la camara
+
+       
+
         
     }
 }
