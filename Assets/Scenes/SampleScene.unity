@@ -1552,6 +1552,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 1294360994}
+  rotationSmoothTime: 0
 --- !u!1001 &596451296
 PrefabInstance:
   m_ObjectHideFlags: 0

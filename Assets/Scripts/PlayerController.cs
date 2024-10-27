@@ -13,10 +13,15 @@ public class PlayerController : MonoBehaviour
     private float mouseVertical = 0;
     private float mouseHorizontal = 0;
 
+    Vector3 inputValues = Vector3.zero;
 
+    [SerializeField] float rotationSmoothTime;
+    float currentAngle;
+    float currentAngleVelocity;
 
     PlayerController controller;
     Camera cam;
+    
 
     private void Awake()
     {
@@ -26,15 +31,7 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        Vector3 inputValues = Vector3.zero;
-
-        vertical = Input.GetAxis("Vertical");
-        horizontal = Input.GetAxis("Horizontal");
-
-        inputValues.z += vertical;
-        inputValues.x += horizontal;
-
-        player.transform.position += inputValues;
+       
 
         mouseVertical = Input.GetAxis("Mouse X");
         mouseHorizontal = Input.GetAxis("Mouse Y");
@@ -44,8 +41,31 @@ public class PlayerController : MonoBehaviour
 
         //El personaje tiene que rotar con respecto a la camara
 
-       
+        float targetAngel = Mathf.Atan2(inputValues.x, inputValues.z) * Mathf.Rad2Deg + cam.transform.eulerAngles.y;
 
         
+    }
+
+    private void HandleMovement()
+    {
+        
+        vertical = Input.GetAxis("Vertical");
+        horizontal = Input.GetAxis("Horizontal");
+
+        inputValues.z += vertical;
+        inputValues.x += horizontal;
+
+        player.transform.position += inputValues;
+
+
+        if(inputValues.magnitude >= 0.1f)
+        {
+            float targetAngle = Mathf.Atan2(inputValues.x, inputValues.z) * Mathf.Rad2Deg + cam.transform.eulerAngles.y;
+            currentAngle = Mathf.SmoothDamp(currentAngle, targetAngle, ref currentAngleVelocity, rotationSmoothTime);
+            transform.rotation = Quaternion.Euler(0, currentAngle, 0);
+
+            Vector3 rotatedMovement = Quaternion.Euler(0, targetAngle, 0) * Vector3.forward;
+            
+        }
     }
 }
