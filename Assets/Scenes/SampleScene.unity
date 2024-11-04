@@ -728,7 +728,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.24379514, y: 0, z: 0, w: 0.96982676}
+  m_LocalRotation: {x: 0.19039433, y: 0.000000014628586, z: -0.000000002837097, w: 0.9817077}
   m_LocalPosition: {x: 34.02, y: 2.4599998, z: -0.16999936}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1388,7 +1388,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 487972510}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.2437951, y: 0, z: 0, w: 0.9698268}
+  m_LocalRotation: {x: 0.19039436, y: 0, z: 0, w: 0.9817077}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1503,6 +1503,7 @@ GameObject:
   m_Component:
   - component: {fileID: 561675280}
   - component: {fileID: 561675281}
+  - component: {fileID: 561675282}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -1538,10 +1539,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f99c19539e04a64e893405528aa1093, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: {fileID: 1294360994}
+  player: {fileID: 561675282}
   vertical: 0.2
   horizontal: 0.2
   rotationSmoothTime: 0
+--- !u!143 &561675282
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 561675279}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Height: 2
+  m_Radius: 0.5
+  m_SlopeLimit: 45
+  m_StepOffset: 0.3
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1001 &596451296
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2900,12 +2927,6 @@ PrefabInstance:
 --- !u!4 &1294360993 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4653274736962478, guid: 4c424221a7b54dd4d914e22e679e4348,
-    type: 3}
-  m_PrefabInstance: {fileID: 1294360992}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1294360994 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1211111090650002, guid: 4c424221a7b54dd4d914e22e679e4348,
     type: 3}
   m_PrefabInstance: {fileID: 1294360992}
   m_PrefabAsset: {fileID: 0}
@@ -4535,7 +4556,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4044717213e31446939f7bd49c896ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_TrackedObjectOffset: {x: 0, y: 0, z: 0}
+  m_TrackedObjectOffset: {x: 0, y: 0.5, z: 0}
   m_LookaheadTime: 0
   m_LookaheadSmoothing: 0
   m_LookaheadIgnoreY: 0
