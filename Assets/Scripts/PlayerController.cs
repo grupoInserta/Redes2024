@@ -14,10 +14,17 @@ public class PlayerController : MonoBehaviour
     private float mouseVertical = 0;
     private float mouseHorizontal = 0;
 
-    private float speed;
+    [SerializeField] private float speed;
+
+    [Header("Gravity")]
+    [SerializeField] float gravity = 9.8f;
+    [SerializeField] float gravityMultiplier = 2;
+    [SerializeField] float groundedGravity = -0.5f;
+    [SerializeField] float jumpHeight = 3f;
+
+    private float velocityY;
 
     Vector3 inputValues = Vector3.zero;
-
 
     [SerializeField] float rotationSmoothTime = 0.2f;
     float currentAngle;
@@ -25,7 +32,6 @@ public class PlayerController : MonoBehaviour
 
     PlayerController controller;
     Camera cam;
-
 
     private void Awake()
     {
@@ -45,46 +51,37 @@ public class PlayerController : MonoBehaviour
 
         player.transform.position += inputValues;
 
-
-        Vector3 movement = new Vector3(horizontal, 0, vertical);
-
-        if(movement.magnitude >= 0.1f)
-        {
-            float targetAngle = Mathf.Atan2(movement.x, movement.z) * Mathf.Rad2Deg;
-            currentAngle = Mathf.SmoothDampAngle(currentAngle, targetAngle, ref currentAngleVelocity, rotationSmoothTime);
-            transform.rotation = Quaternion.Euler(0, targetAngle, 0);
-            player.Move(movement * speed * Time.deltaTime);
-        }
-
-
         HandleMovement();
 
-        //mouseVertical = Input.GetAxis("Mouse X");
-        // mouseHorizontal = Input.GetAxis("Mouse Y");
-        //Vector2 MouseY += mouseVertical;
-        //Vector2 MouseX += mouseHorizontal;
-
+        HandleGravityandJump();
     }
-
     
     private void HandleMovement()
     {
+        Vector3 movement = new Vector3(horizontal, 0, vertical);
 
-
-        float targetAngle = Mathf.Atan2(inputValues.x, inputValues.z) * Mathf.Rad2Deg + cam.transform.eulerAngles.y;
-        currentAngle = Mathf.SmoothDampAngle(currentAngle, targetAngle, ref currentAngleVelocity, rotationSmoothTime);
-        transform.rotation = Quaternion.Euler(0, currentAngle, 0);
-
-
-        //float rotation = Mathf.Atan2(inputValues.x, inputValues.z) * Mathf.Rad2Deg + cam.transform.eulerAngles.y;
-        //transform.eulerAngles = Vector3.up * Mathf.SmoothDampAngle(transform.eulerAngles.y, rotation, ref currentAngleVelocity, rotationSmoothTime);
-
-        
-        
-        
-        
-        //Debug.Log(transform.localEulerAngles = new Vector3 (player.transform.rotation.x, cam.transform.rotation.y));
+        if (movement.magnitude >= 0.1f)
+        {
+            float targetAngle = Mathf.Atan2(movement.x, movement.z) * Mathf.Rad2Deg + cam.transform.eulerAngles.y;
+            currentAngle = Mathf.SmoothDampAngle(currentAngle, targetAngle, ref currentAngleVelocity, rotationSmoothTime);
+            transform.rotation = Quaternion.Euler(0, currentAngle, 0);
+            Vector3 rotatedMovement = Quaternion.Euler(0, targetAngle, 0) * Vector3.forward;
+            player.Move(rotatedMovement * speed * Time.deltaTime);
+        }
     }
-    
-}
+    private void HandleGravityandJump()
+    {
+        if(player.isGrounded && velocityY < 0f)
+        {
+            velocityY = groundedGravity;
+        }
 
+        if(player.isGrounded && Input.GetKeyDown(KeyCode.Space))
+        {
+            velocityY = Mathf.Sqrt(jumpHeight * 2f * gravity);
+        }
+
+        velocityY -= gravity * gravityMultiplier * Time.deltaTime;
+        player.Move(Vector3.up * velocityY * Time.deltaTime);
+    }
+}
