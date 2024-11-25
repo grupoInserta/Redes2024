@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 31813a68ce891b547a0a8d77ce001a39
+guid: 5564512201c3c2446ba07667be6ed30f
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -33,18 +33,18 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: Crouch Turn Left
+      name: Crouch Walking
       takeName: mixamo.com
       internalID: -203655887218126122
       firstFrame: 0
-      lastFrame: 26
+      lastFrame: 35
       wrapMode: 0
-      orientationOffsetY: -20
+      orientationOffsetY: -25
       level: 0
       cycleOffset: 0
       loop: 0
       hasAdditiveReferencePose: 0
-      loopTime: 0
+      loopTime: 1
       loopBlend: 0
       loopBlendOrientation: 0
       loopBlendPositionY: 0
