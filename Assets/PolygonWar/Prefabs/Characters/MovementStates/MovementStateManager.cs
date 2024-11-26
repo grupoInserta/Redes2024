@@ -10,6 +10,17 @@ public class MovementStateManager : MonoBehaviour
     public WalkState walk = new WalkState();
     public CrouchState crouch = new CrouchState();
 
+    [HideInInspector] public Animator anim;
+
+    private void Start()
+    {
+        anim = GetComponentInChildren<Animator>();
+        SwitchState(idle);
+    }
+    private void Update()
+    {
+        currentState.UpdateState(this);
+    }
 
     public void SwitchState(MovementBaseState state)
     {

@@ -24,7 +24,7 @@ public class PlayerController : MonoBehaviour
 
     private float velocityY;
 
-    Vector3 inputValues = Vector3.zero;
+    public Vector3 inputValues = Vector3.zero;
 
     [SerializeField] float rotationSmoothTime = 0.2f;
     float currentAngle;
