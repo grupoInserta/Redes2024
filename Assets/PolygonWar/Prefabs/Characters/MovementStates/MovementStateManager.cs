@@ -10,6 +10,7 @@ public class MovementStateManager : MonoBehaviour
     public WalkState walk = new WalkState();
     public CrouchState crouch = new CrouchState();
 
+    
     [HideInInspector] public Animator anim;
 
     private void Start()
@@ -19,6 +20,8 @@ public class MovementStateManager : MonoBehaviour
     }
     private void Update()
     {
+        anim.SetFloat("HZInput", 1f);
+        anim.SetFloat("VInput", 1f);
         currentState.UpdateState(this);
     }
 
@@ -27,5 +30,4 @@ public class MovementStateManager : MonoBehaviour
         currentState = state;
         currentState.EnterState(this);
     }
-
 }
