@@ -115,9 +115,5 @@ public class NetworkManagerUI : NetworkBehaviour {
         LobbyCanvas.SetActive(true);
         CanvasPrincipal.SetActive(false);
     }
-
-    public void Stop()
-    {
-        NetworkManager.Singleton.Shutdown();
-    }
+   
 }

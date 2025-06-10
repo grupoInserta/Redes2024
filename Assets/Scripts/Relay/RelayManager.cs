@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using Unity.Netcode.Transports.UTP;
@@ -15,8 +16,9 @@ public class RelayManager : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI textoUnion;
     [SerializeField]
-    private TMP_InputField CodUnionIntro;
-
+    private TMP_InputField CodUnionIntro;   
+    [SerializeField]
+    private TextMeshProUGUI textoUnionIncorrecta;
 
     private void Awake()
     {
@@ -123,7 +125,16 @@ public class RelayManager : MonoBehaviour
         catch (RelayServiceException e)
         {
             Debug.LogError($"Error al unirse al Relay: {e.Message}");
+            textoUnionIncorrecta.gameObject.SetActive(true);
+            StartCoroutine(MostarAvisoConRetraso());
         }
+    }
+
+    IEnumerator MostarAvisoConRetraso()
+    {
+        yield return new WaitForSeconds(2f);
+        Debug.Log("¡Esta acción se ejecutó después de 2 segundos!");
+        textoUnionIncorrecta.gameObject.SetActive(false);
     }
 
 

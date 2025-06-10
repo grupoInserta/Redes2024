@@ -4,14 +4,20 @@ using UnityEngine;
 using Unity.Netcode;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Cinemachine;
 
 public class DatosGlobales : NetworkBehaviour
-{   public static DatosGlobales Instance { get; private set; }
+{
+    public static DatosGlobales Instance { get; private set; }
+    public string EscenaActual  { get; private set; }
     public List<string> EscenasJugadas = new List<string>();
-    private Transform miCanvas; 
+    private Transform miCanvas;
     public Button IrInicioButton;
+    public Button SalirButton;
     private string disconnectSceneName = "MenuInicio"; // Nombre de la escena de desconexión
-   // private NetworkList<ulong> ListaIdsClientes;
+    public bool pausado;
+    private CinemachineFreeLook freeLookCamera;
+    private Camera camPpal;
 
     // Start is called before the first frame update
     void Awake()
@@ -29,20 +35,70 @@ public class DatosGlobales : NetworkBehaviour
         EscenasJugadas = new List<string>();
         miCanvas = transform.GetChild(0);
         IrInicioButton.onClick.AddListener(IrAInicio);
-      //  ListaIdsClientes  = new NetworkList<ulong>();
     }
-  
+
+    private bool IsMouseInsideGameWindow()
+    {
+        Vector3 mousePos = Input.mousePosition;
+        return mousePos.x >= 0 && mousePos.x <= Screen.width &&
+               mousePos.y >= 0 && mousePos.y <= Screen.height;
+    }
+
+    private bool IsMouseInsideGameView()
+    {
+        return new Rect(0, 0, Screen.width, Screen.height).Contains(Input.mousePosition);
+    }
+
+    private void Update()
+    {
+        //return;
+        // cursor activo dentro de ventana:
+        if (freeLookCamera != null)
+        {
+            if (IsMouseInsideGameWindow())
+            {
+                freeLookCamera.m_XAxis.m_InputAxisName = "Mouse X";
+                freeLookCamera.m_YAxis.m_InputAxisName = "Mouse Y";
+                //
+                pausado = false;
+                Cursor.visible = true;
+                Cursor.lockState = CursorLockMode.None;
+            }
+            else
+            {
+                // Desactivar input de cámara
+                freeLookCamera.m_XAxis.m_InputAxisName = "";
+                freeLookCamera.m_YAxis.m_InputAxisName = "";
+                // desactivar giro camara:
+                freeLookCamera.m_XAxis.m_InputAxisValue = 0f;
+                freeLookCamera.m_YAxis.m_InputAxisValue = 0f;
+                //
+                Cursor.visible = false;
+                Cursor.lockState = CursorLockMode.Locked;
+                pausado = true;
+                Debug.Log("fuera de ventana");
+            }
+        }
+        else if (camPpal != null)
+        {
+            bool inside = IsMouseInsideGameView();
+            Cursor.visible = inside;
+            Cursor.lockState = inside ? CursorLockMode.None : CursorLockMode.Locked;
+        }
+    }
+
+
     public override void OnNetworkSpawn()
     {
         if (IsServer)
         {
             // Suscribirse a los eventos de conexión/desconexión
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
-            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;           
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
             // Rellenar la lista con los clientes ya conectados            
         }
     }
-   
+
 
     private void OnClientConnected(ulong clientId)
     {
@@ -58,7 +114,7 @@ public class DatosGlobales : NetworkBehaviour
         Debug.Log($"Cliente desconectado: {clientId}");
     }
 
-    private void OnDestroy()
+    public override void OnDestroy()
     {
         if (NetworkManager.Singleton == null) return;
 
@@ -66,10 +122,9 @@ public class DatosGlobales : NetworkBehaviour
         {
             // Desuscribirse de los eventos al destruirse
             NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
-            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;            
-        }         
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+        }
     }
-
 
     private void OnEnable()
     {
@@ -79,7 +134,17 @@ public class DatosGlobales : NetworkBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        EscenaActual = scene.name;
         OrganizarBotones();
+        if (freeLookCamera == null)
+        {
+            freeLookCamera = FindObjectOfType<CinemachineFreeLook>();
+        }
+        if (camPpal == null)
+        {
+            camPpal = Camera.main;
+        }
+        pausado = false;
     }
 
     private void OrganizarBotones()
@@ -87,7 +152,7 @@ public class DatosGlobales : NetworkBehaviour
         string sceneName = SceneManager.GetActiveScene().name;
         if (sceneName != "MenuInicio")
         {
-            miCanvas.transform.GetChild(0).gameObject.SetActive(false);
+            miCanvas.transform.GetChild(0).gameObject.SetActive(false); // error al reiniciar
             miCanvas.transform.GetChild(1).gameObject.SetActive(false);
             IrInicioButton.gameObject.SetActive(true);
         }
@@ -97,7 +162,6 @@ public class DatosGlobales : NetworkBehaviour
             miCanvas.transform.GetChild(0).gameObject.SetActive(true);
             miCanvas.transform.GetChild(1).gameObject.SetActive(true);
         }
-
     }
 
     private void Start()
@@ -120,53 +184,70 @@ public class DatosGlobales : NetworkBehaviour
                 EscenasJugadas.Add(_escena);
                 proximaEscenaVisitada = 0;
             }
-        }        
+        }
         return proximaEscenaVisitada;
     }
 
-    // zona de desconexión: 
+    // zona de desconexión:
+    // 
+    private void EsperarDesconexionCliente(ulong clientId)
+    {
+        Debug.Log($"Cliente {clientId} desconectado (callback)");
+        NetworkManager.Singleton.OnClientDisconnectCallback -= EsperarDesconexionCliente;
+        LoadDisconnectScene();
+    }
     public void IrAInicio()
     {
+        EscenasJugadas = new List<string>();
         // Verificar si el NetworkManager está activo
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
         {
-            // Suscribirse al evento de desconexión (opcional)
-            NetworkManager.Singleton.OnClientDisconnectCallback += OnDisconnected;
-
-            // Cerrar la conexión de red
-            NetworkManager.Singleton.Shutdown();
-
-            Debug.Log("Conexión cerrada. Cargando escena de desconexión...");
+            if (NetworkManager.Singleton.IsHost)
+            {
+                Debug.Log("Host cerrando red...");
+                NetworkManager.Singleton.Shutdown();
+                Destroy(NetworkManager.Singleton.gameObject);
+                LoadDisconnectScene(); // Host puede hacerlo directamente
+            }
+            else if (NetworkManager.Singleton.IsClient)
+            {
+                Debug.Log("Cliente cerrando red...");
+                NetworkManager.Singleton.OnClientDisconnectCallback += EsperarDesconexionCliente;
+                NetworkManager.Singleton.Shutdown(); // Esto desconecta al cliente
+                Destroy(NetworkManager.Singleton.gameObject);
+            }
         }
         else
         {
-            // Si no hay red activa, cargar directamente la escena
-            LoadDisconnectScene();
+            LoadDisconnectScene(); // No había red activa
         }
+    }
+
+
+    public void SalirAplicacion()
+    {
+        Application.Quit();
     }
 
     private void OnDisconnected(ulong clientId)
     {
         Debug.Log($"Cliente desconectado: {clientId}");
-
         // Desuscribirse del evento para evitar problemas
         NetworkManager.Singleton.OnClientDisconnectCallback -= OnDisconnected;
         //ListaIdsClientes.Dispose();
-
         // Cargar la escena de desconexión
         LoadDisconnectScene();
     }
 
     private void LoadDisconnectScene()
     {
-
         if (!Application.CanStreamedLevelBeLoaded("MenuInicio"))
         {
             Debug.LogError($"La escena MenuInicio no existe o no está en la lista de escenas en el Build Settings.");
             return;
         }
-
-        // Cargar la escena sin NetworkManager       
+        // Cargar la escena sin NetworkManager
+        OrganizarBotones();
         SceneManager.LoadScene(disconnectSceneName, LoadSceneMode.Single);
     }
 }

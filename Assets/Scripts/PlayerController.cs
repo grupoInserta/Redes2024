@@ -52,12 +52,13 @@ public class PlayerController : NetworkBehaviour
     private GameObject[] ArrayBalas;
     [SerializeField] Transform bocaCannon;
     public float fuerzaDisparo = 20f;
+    private float angleTolerance = 0.60f; // exactitud disparo
     private PlayerManager miPlayerManager;
     private int MaximoBalas;
     private float velocidadLateralIni;
     private float velocidadAtras;
     //
-    private SceneChangeHandler miSceneChangeHandler;
+
 
 
     private void Awake()/* va amtes de start pero solo se ejecuta en el primer spawneo
@@ -75,7 +76,6 @@ public class PlayerController : NetworkBehaviour
         player = GetComponent<CharacterController>();
         Animacion = gameObject.GetComponent<Animator>();
         miPlayerManager = gameObject.GetComponent<PlayerManager>();
-        miSceneChangeHandler = gameObject.GetComponent<SceneChangeHandler>();
         MaximoBalas = miPlayerManager.obtenerMaxBalas();
         ArrayBalas = new GameObject[MaximoBalas];
         contadorBalas = 0;
@@ -101,32 +101,42 @@ public class PlayerController : NetworkBehaviour
         miPlayerManager.quitarBala();
     }
 
-    /*****error al disparar bala *****/
+
     [ServerRpc]
     private void RequestShootServerRpc(ServerRpcParams serverRpcParams = default)
-    {
+    {    
         // Validación adicional si es necesario (por ejemplo, cooldown o munición)
         // Instanciar y sincronizar el proyectil en todos los clientes
-        ulong shooterId = serverRpcParams.Receive.SenderClientId;
-        float angleTolerance = 0.98f;
-             if(miPlayerManager.controladorNivel == null)
+        ulong shooterId = serverRpcParams.Receive.SenderClientId;        
+        
+        if(miPlayerManager.controladorNivel == null)
         {
             Debug.Log("miPlayerManager.controladorNivel  no valido");
         }
-        Debug.Log("Tamaño del diccionario: " + miPlayerManager.controladorNivel.jugadores.Count);
-        foreach (var player in miPlayerManager.controladorNivel.jugadores.Values)
+
+        foreach (var clientPair in NetworkManager.Singleton.ConnectedClients)
         {
-            if (player.OwnerClientId == shooterId) continue;
+            ulong clientId = clientPair.Key;
+            NetworkClient client = clientPair.Value;
 
-            Vector3 toPlayer = (player.transform.position - transform.position).normalized; // Vector hacia el jugador
-            float alignment = Vector3.Dot(transform.forward, toPlayer);
+            NetworkObject playerObject = client.PlayerObject;
 
-            if (alignment >= angleTolerance) // Si el jugador está alineado con el disparo
+            if (playerObject != null)
             {
-                miPlayerManager.controladorNivel.ApplyDamageServerRpc(player.OwnerClientId); // mandamos su ID
-                Debug.Log($"Jugador {shooterId} impactó a {player.OwnerClientId} por dirección precisa.");
+                GameObject playerGO = playerObject.gameObject;// es el gameobject del player alcanzado!!
+                Debug.Log($"Player {clientId} tiene objeto: {playerGO.name}");            
+                if (playerObject.OwnerClientId == shooterId) continue;
+
+                Vector3 toPlayer = (playerGO.transform.position - transform.position).normalized; // Vector hacia el jugador
+                float alignment = Vector3.Dot(transform.forward, toPlayer);
+                // funciona en cliente y servidor hasta aqui, ver si hay impacto !!!!!!!!!!!!!!!!!!!
+                if (alignment >= angleTolerance) // Si el jugador está alineado con el disparo
+                {
+                    playerGO.GetComponent<PlayerManager>().HerirCliente(); // mandamos su ID
+                    Debug.Log($"Jugador {shooterId} impactó a {clientId} por dirección precisa.");
+                }
             }
-        }
+        }      
 
         ShootProjectileClientRpc(bocaCannon.position, transform.forward);
     }
@@ -135,6 +145,7 @@ public class PlayerController : NetworkBehaviour
 
     private void disparar()
     {
+        if (!IsOwner) return;
         if (contadorBalas >= MaximoBalas) // vaciar todo de balas
         {
             ArrayBalas = new GameObject[MaximoBalas];
@@ -162,7 +173,7 @@ public class PlayerController : NetworkBehaviour
 
 
         if (Input.GetKey(KeyCode.W) && Estado != "Parando" && Estado != "Entransicion" && velocidadLateral ==0)
-        {            ///////////////////////            
+        {                     
        
             aceleracionIncremento += aceleracionIncrementoIni;
             velocidad = velAvanceInicial + aceleracionIncremento;
@@ -431,60 +442,29 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
-    private bool IsMouseInsideGameWindow()
-    {
-        Vector3 mousePos = Input.mousePosition;
-        return mousePos.x >= 0 && mousePos.x <= Screen.width &&
-               mousePos.y >= 0 && mousePos.y <= Screen.height;
-    }
-
+   
 
     private void Update()
     {
         stateName = Animacion.GetCurrentAnimatorClipInfo(0)[0].clip.name;
         if (IsOwner)
-        {            
-            // cursor activo dentro de ventana:
-            if (cam != null)
-            {           
-                if (IsMouseInsideGameWindow())
-                {                 
-                    cam.m_XAxis.m_InputAxisName = "Mouse X";
-                    cam.m_YAxis.m_InputAxisName = "Mouse Y";
-                    //
-                    pausado = false;
-                    /*
-                    Cursor.visible = true;
-                    Cursor.lockState = CursorLockMode.None;
-                    */
-                }
-                else
-                {
-                    // Desactivar input de cámara
-                    cam.m_XAxis.m_InputAxisName = "";
-                    cam.m_YAxis.m_InputAxisName = "";
-                    // desactivar giro camara:
-                    cam.m_XAxis.m_InputAxisValue = 0f;
-                    cam.m_YAxis.m_InputAxisValue = 0f;
-                    //
-                    /*
-                    Cursor.visible = false;
-                    Cursor.lockState = CursorLockMode.Locked;
-                    */
-                    pausado = true;
-                    Debug.Log("fuera de ventana");
-                }
+        {             
+            if(DatosGlobales.Instance.pausado == false)
+            {
+                pausado = false;
             }
-
+            else
+            {
+                pausado = true;
+            }
             //
-            if (miSceneChangeHandler.ListoCamara == true && miPlayerManager.Desactivado == true)
+            if (miPlayerManager.ListoCamara == true && miPlayerManager.Desactivado == true)
             {
                 Estado = "Parado";
                 miPlayerManager.Desactivado = false;
-                cam = miSceneChangeHandler.freeLookCamera;
+                cam = miPlayerManager.freeLookCamera;
                 camPpal = Camera.main;
-                pausado = false;               
-             
+                pausado = false;             
             }
            
             if (miPlayerManager.Desactivado == true) return; // solo se maneja movimiento y animacion cuando
@@ -519,32 +499,36 @@ public class PlayerController : NetworkBehaviour
                 }
             }
         } // fin is Owner
+
         else
-        {
+        { // restablecer seguridad parado
             if (velocidad == 0 && stateName != "IDL")
             {
-                restablecerAnimacionClient();
+                Debug.Log("RESTABLEZCO ANIMACION :::");//OK pero no se para, se repite indefinidamente
+                         
+                //Animacion.Play("Rifle Idle", 0, 0f);
+                velocidad = 0;
+                velocidadLateral = 0;
+                TransicionActual = "CualquieraParado";
+                Estado = "Parado";
+                transicionNumero = 197;               
             }
         }
     }
 
 
-    private void restablecerAnimacionClient()
-    {
-        TransicionActual = "CualquieraParado";
-        transicionNumero = 197;
-    }
+    
 
     private void ResetearSeguridad() // Por si la animacion o movimiento estan trabados y no responden a acciones de teclado
-    {
+    { // Es clicar en cualquier tecla...
         stateInfo = Animacion.GetCurrentAnimatorStateInfo(0);
         bool isMoving = velocidad != 0 || velocidadLateral != 0;
         if (isMoving && !Input.anyKey && !Input.anyKeyDown || !isMoving && !stateInfo.IsName("Rifle Idle") && !Input.anyKey && !Input.anyKeyDown)
         {
             if (Mathf.Floor(timeElapsed) % 1 == 0)
             {
-                if (Mathf.Floor(timeElapsed) > 1)
-                { // un segundo de espera por si se traba la animacion o movimiento
+                if (Mathf.Floor(timeElapsed) > 0.3)
+                { // tres decimas segundo segundo de espera por si se traba la animacion o movimiento
                     velocidad = 0;
                     velocidadLateral = 0;
                     TransicionActual = "CualquieraParado";

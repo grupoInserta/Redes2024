@@ -20,7 +20,7 @@ public class PlayerSpawner : NetworkBehaviour
     }
 
     public void SpawnPlayer() //
-                              // DE UNO EN UNO DACA VEZ CLIC EN BOTON UNIRSE
+                              // DE UNO EN UNO CADA VEZ CLIC EN BOTON UNIRSE
     {
         // if (!IsOwner) return; // Asegúrate de que solo el cliente propietario pueda ejecutar esto
 
@@ -55,14 +55,13 @@ public class PlayerSpawner : NetworkBehaviour
         }
         playerObject.GetComponent<PlayerManager>().miClientId = clientId;
 
-        //DatosGlobales.Instance.crearListaIdClientes(clientId);     
-
+        //DatosGlobales.Instance.crearListaIdClientes(clientId);
         //playerInstance.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
         //playerInstance.GetComponent<NetworkObject>().SpawnWithOwnership(serverRpcParams.Receive.SenderClientId);
         Debug.Log("Jugador instanciado y spawneado por el servidor.ID:" + clientId);
         contCliente.Value++;
     }
-    /***************** TRABAJAR AQUI *************************/
+
     public void EsconderTodosJugadores()
     {
         foreach(GameObject jugador in jugadoresInstanciados)

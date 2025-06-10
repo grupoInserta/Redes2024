@@ -58,8 +58,4 @@ public class CargarEscenasMulti : NetworkBehaviour
         }
     }
 
-    public void Salir()
-    { 
-        Application.Quit();
-    }
 }

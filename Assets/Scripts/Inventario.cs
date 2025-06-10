@@ -6,7 +6,7 @@ using Unity.Netcode;
 
 public class Inventario : NetworkBehaviour
 {
-    private  Image Rojo;
+    private Image Rojo;
     private TextMeshProUGUI textoImpactos;
     private TextMeshProUGUI textoMunicion;
     public TextMeshProUGUI textoLlevoDocumento;
@@ -52,6 +52,19 @@ public class Inventario : NetworkBehaviour
         }
     }
 
+    public void IncrementarContadorScore(int _local, int _contrario)
+    {
+        if(_local != 1000)
+        {
+            textoScoreLocal.text = _local.ToString();
+        }
+        if(_contrario != 1000)
+        {
+            textoScoreContrario.text = _contrario.ToString();
+        }
+        
+    }
+
     // actualizaciones del Inventario:
     public void mostrarMunicion(int numBalas)
     {
@@ -59,7 +72,7 @@ public class Inventario : NetworkBehaviour
     }
     public void mostrarImpactos(int impactosRecibidos)
     {
-        textoImpactos.text = impactosRecibidos.ToString(); 
+        textoImpactos.text = impactosRecibidos.ToString();
     }
     public void mostrarDocumento(int cantDocObtenido, int total)
     {
@@ -76,8 +89,7 @@ public class Inventario : NetworkBehaviour
         if(cantTransmisionEmitida>= TotalTransmision)
         {
             textoTransmision.text = "OK";
-        }
-       
+        }       
         //IMPLEMENTAR BARRA PROGRESO 2
         UpdateProgressTrans((float)cantTransmisionEmitida, (float)TotalTransmision);
     }

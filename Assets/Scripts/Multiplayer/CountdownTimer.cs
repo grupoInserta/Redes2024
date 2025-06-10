@@ -45,7 +45,6 @@ public class CountdownTimer : NetworkBehaviour
 
             // Espera un segundo
             yield return new WaitForSeconds(1);
-
             // Reduce el tiempo
             currentTime--;
         }

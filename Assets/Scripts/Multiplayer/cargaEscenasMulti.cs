@@ -29,11 +29,7 @@ public class cargaEscenasMulti : NetworkBehaviour
         SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
         // single significa que reemplaza totalmente a la escena actual
 
-    }
-
-    public void Salir()
-    {
-        Debug.Log("Adios");
-        Application.Quit();
-    }
+    }  
+        
+    
 }

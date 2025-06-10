@@ -8,19 +8,9 @@ using UnityEngine.SceneManagement;
 
 public class ControladorNivel : NetworkBehaviour
 {
-    /*
-    private TextMeshProUGUI textObjetos;
-    private TextMeshProUGUI TextoJuego;
-    private cargaEscenasMulti cargaEscenas;
-    */
-
-    private AudioSource Derrota;
+    public string EscenaActual { get; set; }
     public Dictionary<int, PlayerManager> jugadores { get; set; }
-    /*
-    private bool JugadoresDetectados = false;
-     */
-    public CountdownTimer miCountdownTimer { get; set; }
-   
+    public CountdownTimer miCountdownTimer { get; set; }   
     public int contadorLocalScore;
     public int contadorContrarioScore;
     [SerializeField]
@@ -33,32 +23,29 @@ public class ControladorNivel : NetworkBehaviour
     private string PlayerManagerLocalZona;
     private bool InventarioEncontrado;
     private VictoriaDerrota miVictoriaDerrota;
+    private miNetworkManager MiNetworkManager;
 
 
     // Start is called before the first frame update
     private void Start()
-    {
+    {       
         miCountdownTimer = GetComponent<CountdownTimer>();
         miVictoriaDerrota = GetComponent<VictoriaDerrota>();
+        MiNetworkManager = GetComponent<miNetworkManager>();
         keepRunning = true;
-    }
-
-    public void ChangeScene(string sceneName)
-    {
-        if (NetworkManager.Singleton.IsServer)
+        if (NetworkManager.Singleton.SceneManager != null)
         {
-            NetworkManager.Singleton.SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
+            NetworkManager.Singleton.SceneManager.OnLoadComplete += OnSceneLoadComplete;
         }
-    }
+    }   
 
-    private void OnEnable()
-    {
-        NetworkManager.Singleton.SceneManager.OnLoadComplete += OnSceneLoadComplete;
-    }
 
     private void OnDisable()
     {
-        NetworkManager.Singleton.SceneManager.OnLoadComplete -= OnSceneLoadComplete;
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.SceneManager != null)
+        {
+            NetworkManager.Singleton.SceneManager.OnLoadComplete -= OnSceneLoadComplete;
+        }
     }
 
     public Vector3 obtenerPosicionEnEscena(ulong id)
@@ -86,31 +73,7 @@ public class ControladorNivel : NetworkBehaviour
         return Zona;
     }
 
-    [ServerRpc]
-    public void ApplyDamageServerRpc(ulong OwnerClientId) // player que ha recibido bala
-    {
-        NetworkObject JugadorHerido = GetPlayerObjectByClientId(OwnerClientId);
-        if (IsOwner)
-        {
-            JugadorHerido.GetComponent<PlayerManager>().HerirClientRpc();
-        }
-
-    }
-
-    // Método para obener players a traves de sus idCliente, no utilizado:
-    private NetworkObject GetPlayerObjectByClientId(ulong clientId)
-    {
-        // Verificar si el cliente está conectado
-        if (NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out var client))
-        {
-            // Retornar el objeto de red del cliente (si existe)
-            return client.PlayerObject;
-        }
-
-        Debug.LogWarning($"Cliente con ID {clientId} no está conectado o no tiene un objeto asignado.");
-        return null;
-    }
-
+    
     private string GetLocalPlayerZona() // ES PARA OBTENER EL LUGAR/ONA DEL PLAYER LOCAL
     { // solo se puede hacer en el SERVIDOR
         string Lugar;
@@ -118,7 +81,6 @@ public class ControladorNivel : NetworkBehaviour
         {
             ulong localClientId = NetworkManager.Singleton.LocalClientId;
             PlayerManager LocalPlayerManager = jugadores.ContainsKey((int)localClientId) ? jugadores[(int)localClientId] : null;
-
             Lugar = LocalPlayerManager.Lugar;
         }
         else
@@ -128,19 +90,20 @@ public class ControladorNivel : NetworkBehaviour
         return Lugar;
     }
 
-    public void IncrementarContadorScore(string zona)
+    public void IncrementarContadorScore(string zona, ulong _id)
     { // viene de un clientRpc...
 
-            string JugadorManagerZona = GetLocalPlayerZona();
-            if (JugadorManagerZona == zona)
-            {
-                IncrementarContadorLocalScore();
-            }
-            else
-            {
-                IncrementarContadorContrarioScore();
-            }
+        string JugadorManagerZona = GetLocalPlayerZona();
+        if (JugadorManagerZona == zona)
+        {
+            IncrementarContadorLocalScore();
+        }
+        else
+        {
+            IncrementarContadorContrarioScore();
+        }
     }
+
     private void IncrementarContadorLocalScore()
     {
         Debug.Log("contadorLocalScore: " + contadorLocalScore);
@@ -154,12 +117,27 @@ public class ControladorNivel : NetworkBehaviour
         contadorContrarioScore++;
         scoreContrario.text = contadorContrarioScore.ToString();
     }
-   
+
+    private void EspawnearTodosLosJugadores()
+    {
+        Debug.Log("Espawnear Todos Los Jugadores ::::");
+        var connectedClients = NetworkManager.Singleton.ConnectedClientsList;
+        foreach (var cliente in connectedClients) // client es un NetworkClient
+        {
+            ulong clienteId = cliente.ClientId;
+            MiNetworkManager.SpawnPlayer(clienteId);
+        }
+    }
 
     private void OnSceneLoadComplete(ulong clientId, string sceneName, LoadSceneMode loadSceneMode)
     {
+        EscenaActual = sceneName;
         if (sceneName == "Nivel1" || sceneName == "Nivel2")
         {
+            if (IsServer)
+            {
+                EspawnearTodosLosJugadores();
+            }           
             contadorLocalScore = 0;
             contadorContrarioScore = 0;
             InventarioObjeto = GameObject.FindGameObjectWithTag("CanvasInventario");
@@ -225,40 +203,12 @@ public class ControladorNivel : NetworkBehaviour
         }
         Debug.Log("¡Acción ejecutada después de 1 segundo!");
     }
-
-    // PASAR ESTO DESDE AQUI AL SERVIDOR Y LUEGO A LOS DEMAS
-    /*
-    public void PartidaTerminada(ulong ganadorId)
-    {
-        Debug.Log("PARTIDA GANADA");
-        Debug.Log("Partida terminada GANADORID: " + ganadorId);
-        if (IsOwner)
-        {
-            Debug.Log("PARTIDA GANADA");
-            PartidaTerminadaServerRpc(ganadorId);
-        }       
         
-    }
-    */
 
     public void PartidaTerminada(ulong idGanador)
     {
          miVictoriaDerrota.EndGame(idGanador);
     }
-
-    /*
-    [ServerRpc]
-    public void PartidaTerminadaServerRpc(ulong ganadorId)
-    {   Debug.Log("GANADORID-1: " + ganadorId);
-        PartidaTerminadaClientRpc(ganadorId);     
-    }
-
-    [ClientRpc]
-    private void PartidaTerminadaClientRpc(ulong ganadorId)
-    {
-        miVictoriaDerrota.EndGame(ganadorId);
-        Debug.Log("GANADORID-2: " + ganadorId);
-    }
-    */
+    
 
 }

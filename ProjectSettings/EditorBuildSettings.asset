@@ -6,15 +6,30 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
+    path: Assets/Scenes/MenuInicio.unity
+    guid: 03600eb7b65c13946bb4b366284122b0
   - enabled: 1
-    path: Assets/Scenes/Escena1.unity
-    guid: 96c6c52e1b3f81a4b99587f6b99f6262
+    path: Assets/Scenes/InicioRelay.unity
+    guid: c4178f86e6799af458c71c80743bbc95
   - enabled: 1
-    path: Assets/Scenes/Escena2.unity
-    guid: a2663609ec123744c83040edb43135aa
+    path: Assets/Scenes/InicioP2P.unity
+    guid: 5b8431f8c222e1e46ac6a7730c64171d
   - enabled: 1
-    path: Assets/Scenes/Nivel3.unity
-    guid: acbd6b5b51cc0f6479583a099110be79
+    path: Assets/Scenes/Nivel1.unity
+    guid: 9fc0d4010bbf28b4594072e72b8655ab
+  - enabled: 1
+    path: Assets/Scenes/Nivel2.unity
+    guid: 93e78c2845b579a46a192f7d0341caf6
+  - enabled: 1
+    path: Assets/Scenes/Final.unity
+    guid: f910bf6962500ef4fbfb9f641cf33a77
+  - enabled: 1
+    path: Assets/Scenes/Derrota.unity
+    guid: ad67475ec89dc6646ac3edfdc61d2bab
+  - enabled: 1
+    path: Assets/Scenes/Empate.unity
+    guid: cb76b830138e463499c0f7a4eb153fd3
+  - enabled: 1
+    path: Assets/Scenes/Victoria.unity
+    guid: aced1c989832f6f4c885f6cb9115a300
   m_configObjects: {}

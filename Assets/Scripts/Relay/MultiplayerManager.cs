@@ -19,7 +19,8 @@ public class MultiplayerManager : MonoBehaviour
     private CargarEscenasMulti cargarEscenasMulti;
 
     private void Start()
-    {        
+    {
+        Debug.Log("INICIO HOST");   
         playerSpawner = gameObject.GetComponent<PlayerSpawner>();
         cargarEscenasMulti = gameObject.GetComponent<CargarEscenasMulti>();        
         // Asigna los eventos de los botones
@@ -83,10 +84,8 @@ public class MultiplayerManager : MonoBehaviour
             LobbyTexto.gameObject.SetActive(true);
             playerSpawner.SpawnPlayer();
             unirseButton.gameObject.SetActive(false);
-            textoUnion.gameObject.SetActive(false);
-           
-        }    
-        
+            textoUnion.gameObject.SetActive(false);           
+        }        
     }
     
 }
