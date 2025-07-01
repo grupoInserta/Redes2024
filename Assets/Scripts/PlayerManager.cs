@@ -183,11 +183,13 @@ public class PlayerManager : NetworkBehaviour
     private void respawnear()
     {
         ControladorNivel controladorNivel =  GameObject.FindGameObjectWithTag("ControladorEscena").GetComponent<ControladorNivel>();
+        Inventario InventarioScript = GameObject.FindGameObjectWithTag("CanvasInventario").GetComponent<Inventario>();
         localClientId = NetworkManager.Singleton.LocalClientId;
         PosicionInicial = controladorNivel.obtenerPosicionEnEscena(localClientId);
         cantidaDocumentoObtenido = 0;
         cantTransmisionEmitida = 0;
         TengoElDocumento = false;
+        InventarioScript.textoLlevoDocumento.text = "";
         ComunicarPosicionATodosServerRpc(PosicionInicial);       
     }
 

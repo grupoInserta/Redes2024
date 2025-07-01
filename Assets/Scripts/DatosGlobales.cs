@@ -51,7 +51,7 @@ public class DatosGlobales : NetworkBehaviour
 
     private void Update()
     {
-        return;
+        //return;
         // cursor activo dentro de ventana:
         if (freeLookCamera != null)
         {
