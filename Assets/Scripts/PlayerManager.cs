@@ -7,16 +7,17 @@ using Cinemachine;
 
 public class PlayerManager : NetworkBehaviour
 {
-    public ulong miClientId { get; set; }
+
     private ulong localClientId;
     private ulong clientId;
+    public ulong miClientId { get; set; }
     public Vector3 PosicionInicial { get; set; }
     public string Lugar { get; set; }
     public ControladorNivel controladorNivel;
     private int ImpactosRecibidos;
     private int maximoImpactos;
     private bool TengoElDocumento;
-    private bool DocumentoTransmitido;
+    private bool DocumentoTransmitido;    
     private int totalTransmisiones;
     private int contadorCarga;
     public int numBalas;
@@ -25,12 +26,13 @@ public class PlayerManager : NetworkBehaviour
     public bool Herido { get; set; }
     public bool RecuperadoHerido { get; set; }
     public bool Desactivado { get; set; }
-    private PlayerController miPayerController;
+    private ThirdPersonController miThirdPersonController;
     private Inventario InventarioScript;
-    private int cantidaDocumentoObtenido = 0;
-    private int totalCantDoc = 40;
-    private int cantTotalTransmision = 40;
-    private int cantTransmisionEmitida = 0;
+    private float cantidaDocumentoObtenido = 0;
+    private float totalCantDoc = 40;
+    private float cantTotalTransmision = 40;
+    private float cantTransmisionEmitida = 0;
+    private float velocidadBarra = 20f;
     private List<Transform> MunicionTransforms;
     private Transform targetDocumento;
     private Transform targetTransmisor;
@@ -42,15 +44,20 @@ public class PlayerManager : NetworkBehaviour
     private CargarEscenasMulti miCargarEscenasMulti;
     private Dictionary<int, PlayerManager> jugadores;
     public bool ListoCamara { get; set; }// se refiere a que la camara ya ha sido encontrada y adjudicada
-
-    //public CinemachineVirtualCamera virtualCamera;
+    private bool posicionadoInicio;
     public CinemachineFreeLook freeLookCamera;
+    private CharacterController Ccontroller;
+
 
     private void Awake()
     {
+        SetPlayerVisible(false);
         Desactivado = true;
         soyElLocal = false;
         Lugar = "NADA";
+        ListoCamara = false;
+        posicionadoInicio = false;
+        Ccontroller = GetComponent<CharacterController>();
     }
     void Start()
     {
@@ -58,13 +65,13 @@ public class PlayerManager : NetworkBehaviour
         if (DatosGlobales.Instance.EscenaActual != "Nivel1" && DatosGlobales.Instance.EscenaActual != "Nivel2")
         {
             Desactivado = true;
+            SetPlayerVisible(true);
         }
         else if(DatosGlobales.Instance.EscenaActual == "MenuInicio")
         {
-            miPayerController.Estado = "Desactivado";
+            miThirdPersonController.Estado = "Desactivado";            
         }
     }
-
    
 
     public void SetPlayerVisible(bool visible)
@@ -83,6 +90,7 @@ public class PlayerManager : NetworkBehaviour
 
     private void ObtenerCamara()
     {
+        if (!posicionadoInicio) return;
         // Encuentra la FreeLook Camera en la escena si no está asignada
         if (freeLookCamera == null)
         {
@@ -91,39 +99,31 @@ public class PlayerManager : NetworkBehaviour
 
         if (freeLookCamera != null)
         {
-            // Asigna el jugador local como el objetivo de la FreeLook Camera
+            // En PlayerController aqui se Asigna el jugador local como el objetivo de la FreeLook Camera
             Debug.Log("camara encontrada***");
             freeLookCamera.Follow = transform.GetChild(0).transform;
             freeLookCamera.LookAt = transform.GetChild(0).transform;
             freeLookCamera.m_YAxis.Value = 0.7f;
-            ListoCamara = true;
+            ObtenerInventarioYzonaTransmis();
+            ListoCamara = true; 
+            
         }
     }
-    public void colocarInicio()// viene de ScenechangeHandler a traves de un client rpc
+
+    public void colocarInicio(Vector3 PosicionInicial, ulong _clientId)// viene de ScenechangeHandler a traves de un client rpc
     {
-        /* :::: */
         if (DatosGlobales.Instance.EscenaActual != "Nivel1" && DatosGlobales.Instance.EscenaActual != "Nivel2") return;
+
         // va antes de encontrar la cámara  y solo se ejecuta en las ESCENAS DE NIVEL
         controladorNivel = GameObject.FindGameObjectWithTag("ControladorEscena").GetComponent<ControladorNivel>();
-
-        if (controladorNivel == null) return;        
+        if (controladorNivel == null) return;
 
         // para saber la zona en el servidor de todos hace falta ser Host en el condicional
         // Obtener el ClientId del jugador local
-        
-        if (IsOwner)
-        {
-            
-            localClientId = NetworkManager.Singleton.LocalClientId;
-            Lugar = controladorNivel.obtenerZonaEnEscena(localClientId);
-            PosicionInicial = controladorNivel.obtenerPosicionEnEscena(localClientId);
-            transform.position = PosicionInicial;
-            NetworkObject networkObject = GetComponent<NetworkObject>();
-            clientId = networkObject.OwnerClientId;
-            Debug.Log($"Este objeto pertenece al cliente: {clientId}");
-            ComunicarPosicionATodosServerRpc(PosicionInicial);            
-            ObtenerCamara();
-        }       
+        //localClientId = NetworkManager.Singleton.LocalClientId;
+        clientId = _clientId;
+        Lugar = controladorNivel.obtenerZonaEnEscena(clientId);
+        ComunicarPosicionATodosClientRpc(PosicionInicial, Lugar);
         
     }
     /*
@@ -147,8 +147,8 @@ public class PlayerManager : NetworkBehaviour
         RecuperadoHerido = false;
         Desactivado = true;
         JuegoGanado = false;
-        miPayerController = gameObject.GetComponent<PlayerController>();
-        numeroMaximoTransmisiones = 5;//!!!!!!!!!!!!!!!! CAMBIAR A CINCO PARA EL JUEGO REAL A 5
+        miThirdPersonController = gameObject.GetComponent<ThirdPersonController>();
+        numeroMaximoTransmisiones = 5;// CAMBIAR A CINCO PARA EL JUEGO REAL A 5
         MunicionTransforms = new List<Transform>();
         GameObject[] objectsWithTag = GameObject.FindGameObjectsWithTag("Municion");
         // Recorrer cada objeto encontrado y agregar su Transform a la lista
@@ -160,7 +160,7 @@ public class PlayerManager : NetworkBehaviour
     private void ObtenerInventarioYzonaTransmis() // se llama cuando de acaba de cargar toda la escena
     {
         Iniciar();
-        miPayerController.Iniciar();
+        miThirdPersonController.Iniciar();
         if (IsOwner)
         {
             soyElLocal = true;
@@ -174,16 +174,21 @@ public class PlayerManager : NetworkBehaviour
             {
                 targetTransmisor = GameObject.FindGameObjectWithTag("Transmisor2").transform;
             }
-        }
-        Debug.Log("EL LUGAR ES: " + Lugar);
+            Debug.Log("EL LUGAR ES: " + Lugar); 
+        }        
         targetDocumento = GameObject.FindGameObjectWithTag("Documento").transform;
         miCargarEscenasMulti = GameObject.FindGameObjectWithTag("CargarEscenasMulti").GetComponent<CargarEscenasMulti>();
     }
 
     private void respawnear()
     {
-        gameObject.transform.position = PosicionInicial;
+        ControladorNivel controladorNivel =  GameObject.FindGameObjectWithTag("ControladorEscena").GetComponent<ControladorNivel>();
+        localClientId = NetworkManager.Singleton.LocalClientId;
+        PosicionInicial = controladorNivel.obtenerPosicionEnEscena(localClientId);
+        cantidaDocumentoObtenido = 0;
+        cantTransmisionEmitida = 0;
         TengoElDocumento = false;
+        ComunicarPosicionATodosServerRpc(PosicionInicial);       
     }
 
     public int obtenerMaxBalas()
@@ -200,7 +205,6 @@ public class PlayerManager : NetworkBehaviour
         numBalas--;
     }
 
-
     //  DAÑOS Y DISPAROS
 
     [ClientRpc]
@@ -208,25 +212,37 @@ public class PlayerManager : NetworkBehaviour
     {       
         Herido = true;
         ImpactosRecibidos = _ImpactosRecibidos;
+        Debug.Log("IMPACTOS:************************ " + ImpactosRecibidos);
         if (ImpactosRecibidos == maximoImpactos)
         {
-            Debug.Log("RESPAWNEAR");
             Herido = false;
             ImpactosRecibidos = 0;
             respawnear();
+            Desactivado = true;
         }
-        Debug.Log("IMPACTOS: " + ImpactosRecibidos);
+        
         if (IsOwner)
         {
             if(ImpactosRecibidos == 0)
             {
                 NotificarReinicioImpactosServerRpc();
-            }
-            
+            }            
             // Actualiza panel de vida del jugador local
             Debug.Log($"[Client] Impactos Recibidos: {ImpactosRecibidos}");
             InventarioScript.mostrarImpactos(ImpactosRecibidos);
         }
+    }
+
+    [ServerRpc]
+    private void visibilizarEnTodosServerRpc()
+    {
+        visibilizarEnTodosClientRpc();
+    }
+
+    [ClientRpc]
+    private void visibilizarEnTodosClientRpc()
+    {
+        SetPlayerVisible(true);
     }
 
     [ServerRpc]
@@ -252,22 +268,25 @@ public class PlayerManager : NetworkBehaviour
             {
                 TargetClientIds = new ulong[] { OwnerClientId }
             }
-        });       
-
+        }); 
     }  
 
     [ClientRpc]
-    public void ComunicarPosicionATodosClientRpc(Vector3 PosicionInicial)
+    public void ComunicarPosicionATodosClientRpc(Vector3 PosicionInicial, string lugar)
     {
-      SetPlayerVisible(true);
-      transform.position = PosicionInicial;
-      ObtenerInventarioYzonaTransmis();
+        SetPlayerVisible(true);
+        posicionadoInicio = true;
+        Ccontroller.enabled = false;        
+        transform.position = PosicionInicial;
+        Ccontroller.enabled = true;
+        TengoElDocumento = false;        
+        Lugar = lugar;
     }
 
     [ServerRpc]
     public void ComunicarPosicionATodosServerRpc(Vector3 PosicionInicial)
     {
-        ComunicarPosicionATodosClientRpc(PosicionInicial);
+        ComunicarPosicionATodosClientRpc(PosicionInicial, Lugar);
     }  
 
 
@@ -277,6 +296,7 @@ public class PlayerManager : NetworkBehaviour
         InventarioScript.mostrarDocumento(0, totalCantDoc);
         InventarioScript.mostrarTransmision(0, cantTotalTransmision);
         InventarioScript.textoLlevoDocumento.text = "";
+        localClientId = NetworkManager.Singleton.LocalClientId;
         if (IsOwner)
         {
             ActualizarScoreServerRpc(Lugar, localClientId, totalTransmisiones);
@@ -295,25 +315,27 @@ public class PlayerManager : NetworkBehaviour
     public void ActualizarScoreClientRpc(string zona, ulong _localClientId, int _transmisiones)
     {
         Debug.Log("actualizo el score del que ha ganado en todos los clientes");
-        Debug.Log("zona: " +zona+ "localclientId: "+ _localClientId + "Num transmisiones:" + _transmisiones);
- 
-        if(Lugar == zona)
+        Debug.Log("lugar: " + Lugar +" zona: " +zona+ "localclientId: "+ _localClientId + "Num transmisiones:" + _transmisiones);
+        ControladorNivel controladorNivel = GameObject.FindGameObjectWithTag("ControladorEscena").GetComponent<ControladorNivel>();
+        Inventario InventarioScript = GameObject.FindGameObjectWithTag("CanvasInventario").GetComponent<Inventario>();
+        localClientId = NetworkManager.Singleton.LocalClientId;
+        Lugar = controladorNivel.obtenerZonaEnEscena(localClientId);
+        if (Lugar == zona)
         {
             InventarioScript.IncrementarContadorScore(_transmisiones, 1000);
             controladorNivel.contadorLocalScore = _transmisiones;             
         }
         else
         {
-            Inventario InventarioScript = GameObject.FindGameObjectWithTag("CanvasInventario").GetComponent<Inventario>();
-            InventarioScript.IncrementarContadorScore(1000, _transmisiones);
-            ControladorNivel controladorNivel = GameObject.FindGameObjectWithTag("ControladorEscena").GetComponent<ControladorNivel>();
+            InventarioScript.IncrementarContadorScore(1000, _transmisiones);            
             controladorNivel.contadorContrarioScore = _transmisiones;
         }        
-        comprobarGanarPartida(_localClientId, _transmisiones);
+        comprobarGanarPartida(localClientId, _transmisiones);
     }
 
     private void comprobarGanarPartida(ulong _localClientId, int _transmisiones)
     {
+        Debug.Log("COMPRUEBO GANAR PARTIDA.. y tiempoterminado: "+ TiempoTerminado);
         if (!TiempoTerminado)
         {
             if (_transmisiones >= numeroMaximoTransmisiones)
@@ -323,16 +345,15 @@ public class PlayerManager : NetworkBehaviour
                     ganarPartidaServerRpc(_localClientId);
                 }
             }
-
         }
         else
         {
             if (IsOwner)
             {
                 ganarPartidaServerRpc(_localClientId);
+                Debug.Log("GANAR PARTIDA--------------" + _localClientId);
             }
-        }
-       
+        }       
     }
 
     [ServerRpc]
@@ -363,6 +384,8 @@ public class PlayerManager : NetworkBehaviour
 
     private void DetectarTiempoTerminado()
     {
+        controladorNivel = GameObject.FindGameObjectWithTag("ControladorEscena").GetComponent<ControladorNivel>();
+
         if (controladorNivel == null || TiempoTerminado) return;
         if (controladorNivel.miCountdownTimer.tiempoterminado && TiempoTerminado == false)
         {
@@ -380,35 +403,35 @@ public class PlayerManager : NetworkBehaviour
             } 
         }
     }
-
    
 
     public override void OnNetworkSpawn()
     {
-         colocarInicio();
+         //colocarInicio();
     }
-
-
 
     // Update is called once per frame
     void Update()
     {
+        if (IsOwner && posicionadoInicio && !ListoCamara)
+        {
+            ObtenerCamara();
+        }
+
         if (Desactivado) return;
         DetectarTiempoTerminado();
         if (IsOwner && (Lugar == "Posicion1" || Lugar == "Posicion2"))
         {
+            
             //SINCRONIZAR
             SincronizarPosicionServerRpc(transform.position);// sincronizar es mantener los objetos en posiciones persisitentes en todas las visualizaciones del juego por parte los jugadores.
             SincronizarRotacionServerRpc(transform.rotation);
 
-            // sincronizacion de animaciones **************
-            UpdateAnimacionServerRpc(miPayerController.transicionNumero);
-            SincronizarArmaServerRpc(miPayerController.transicionNumero);
             // inventario:
             if (InventarioScript != null)
             {
                 InventarioScript.mostrarMunicion(numBalas);                
-                InventarioScript.mostrarDocumento(cantidaDocumentoObtenido, totalCantDoc);
+                InventarioScript.mostrarDocumento(cantidaDocumentoObtenido, totalCantDoc);               
                 InventarioScript.mostrarTransmision(cantTransmisionEmitida, cantTotalTransmision);
              }
 
@@ -434,7 +457,7 @@ public class PlayerManager : NetworkBehaviour
             float distance = Vector3.Distance(transform.position, targetDocumento.position);
             if (distance <= detectionRange)
             {
-                cantidaDocumentoObtenido++;
+                cantidaDocumentoObtenido += velocidadBarra * Time.deltaTime;
                 if (cantidaDocumentoObtenido >= totalCantDoc)
                 {
                     TengoElDocumento = true;
@@ -448,8 +471,9 @@ public class PlayerManager : NetworkBehaviour
             float distance = Vector3.Distance(transform.position, targetTransmisor.position);
 
             if (distance <= detectionRange && TengoElDocumento)
-            {
-                cantTransmisionEmitida++;
+            {                
+                cantTransmisionEmitida += velocidadBarra * Time.deltaTime;
+
                 if (cantTransmisionEmitida >= cantTotalTransmision)
                 {
                     totalTransmisiones++; 
@@ -466,36 +490,8 @@ public class PlayerManager : NetworkBehaviour
 
     // si el tiempo se ha terminado tiene mayor score o si el tiempo no ha terminado y ha alcanzado el score maximo
    
-
-
-    // SINCRONIZACIÓN RESTO JUGADORES,ANIMACION
-    [ServerRpc]
-    private void UpdateAnimacionServerRpc(int newSpeed)
-    {
-        // Actualizar la variable de red en el servidor
-        // y seguidamente en los clientes
-        UpdateAnimacionClientRpc(newSpeed);
-    }
-
-    [ServerRpc]
-    private void SincronizarArmaServerRpc(int newSpeed)
-    {
-        SincronizarArmaClientRpc(newSpeed);
-    }
-
-    [ClientRpc]
-    private void SincronizarArmaClientRpc(int newSpeed)
-    {
-        transform.GetChild(3).transform.position = transform.GetChild(3).transform.position;
-        transform.GetChild(1).transform.position = transform.GetChild(1).transform.position;
-    }
-
-    [ClientRpc]
-    private void UpdateAnimacionClientRpc(int newSpeed)
-    {
-        miPayerController.HandleAnimation(newSpeed, "nada"); // solo enviamos el mumero de la variable del componente animator
-    }
-
+     
+   
 
     // SINCRONIZACIÓN RESTO JUGADORES, POSICION Y ROTACION
     [ServerRpc]

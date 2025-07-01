@@ -7,7 +7,7 @@ public class CountdownTimer : NetworkBehaviour
 {
     public TextMeshProUGUI countdownText; // Referencia al texto de la cuenta atrás
     [SerializeField]
-    public int countdownTime = 100; // Tiempo inicial de la cuenta atrás en segundos
+    public int countdownTime; // Tiempo inicial de la cuenta atrás en segundos
     public bool tiempoterminado { get; set; }
     private void Start()
     {

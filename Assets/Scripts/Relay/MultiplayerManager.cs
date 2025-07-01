@@ -51,7 +51,7 @@ public class MultiplayerManager : MonoBehaviour
     }
 
     public async void StartClient()
-    {        
+    {       
         hostButton.gameObject.SetActive(false);
         clientButton.gameObject.SetActive(false);
         CodUnionIntro.gameObject.SetActive(false);
@@ -59,7 +59,7 @@ public class MultiplayerManager : MonoBehaviour
         Debug.Log("INICIO CLIENTE: " + joinCode);
         await RelayManager.Instance.JoinRelay(joinCode);
         textoUnion.gameObject.SetActive(false);
-        unirseButton.gameObject.SetActive(true);
+        unirseButton.gameObject.SetActive(true);        
     }
 
     public void mostrarJugar()
@@ -69,8 +69,6 @@ public class MultiplayerManager : MonoBehaviour
 
     private void Jugar()
     {
-        // Esconder Jugadores:::
-        playerSpawner.EsconderTodosJugadores();
         cargarEscenasMulti.CargarEscenaAleat();        
         TextoCargandoNivel.gameObject.SetActive(true);
         LobbyTexto.gameObject.SetActive(false);

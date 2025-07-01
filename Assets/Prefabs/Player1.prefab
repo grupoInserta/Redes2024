@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &2765016859705622477
+--- !u!1 &2853844882680441324
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,25 +8,25 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1502225963791624132}
+  - component: {fileID: 5317534646628808368}
   m_Layer: 0
-  m_Name: objetivoCamara
+  m_Name: Bocacanon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1502225963791624132
+--- !u!4 &5317534646628808368
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2765016859705622477}
+  m_GameObject: {fileID: 2853844882680441324}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.009997487, y: 1.23, z: -0.01}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0.01, y: 1.32, z: 0.14}
+  m_LocalScale: {x: 1.8, y: 1.8, z: 1.8}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3123530536694667386}
@@ -68,8 +68,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1502225963791624132}
-  - {fileID: 7428771801477940505}
+  - {fileID: 5317534646628808368}
   - {fileID: 7052906319885114163}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -137,7 +136,7 @@ CapsuleCollider:
   m_Radius: 0.4
   m_Height: 1.84
   m_Direction: 1
-  m_Center: {x: 0, y: 0.93, z: 0}
+  m_Center: {x: 0, y: 0.91, z: 0}
 --- !u!54 &5507624885756282399
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -204,9 +203,9 @@ CharacterController:
   m_Radius: 0.4
   m_SlopeLimit: 45
   m_StepOffset: 0.3
-  m_SkinWidth: 0.08
+  m_SkinWidth: 0.01
   m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 0.94, z: 0}
+  m_Center: {x: 0, y: 0.9, z: 0}
 --- !u!114 &3138476554913264971
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -233,40 +232,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   velocity: 5
   sprintAdittion: 3.5
-  jumpForce: 18
+  jumpForce: 14
   jumpTime: 0.85
   gravity: 9.8
---- !u!1 &7538168672245800523
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 7428771801477940505}
-  m_Layer: 0
-  m_Name: Bocacanon
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &7428771801477940505
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7538168672245800523}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.262, y: 1.17, z: 1.02}
-  m_LocalScale: {x: 1.7999998, y: 1.7999992, z: 1.8000009}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 3123530536694667386}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  Bala: {fileID: 2234863555220941079, guid: aa0c2528140832642bf1ae2ec3f66fd5, type: 3}
+  bocaCannon: {fileID: 5317534646628808368}
+  soyLocal: 0
+  pausado: 0
 --- !u!1001 &4958159844419302427
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -74,7 +74,7 @@ public class Inventario : NetworkBehaviour
     {
         textoImpactos.text = impactosRecibidos.ToString();
     }
-    public void mostrarDocumento(int cantDocObtenido, int total)
+    public void mostrarDocumento(float cantDocObtenido, float total)
     {
         if(cantDocObtenido >= total)
         {
@@ -84,7 +84,7 @@ public class Inventario : NetworkBehaviour
         UpdateProgressDoc((float)cantDocObtenido, (float)total);
         //IMPLEMENTAR BARRA PROGRESO 
     }
-    public void mostrarTransmision(int cantTransmisionEmitida, int TotalTransmision)
+    public void mostrarTransmision(float cantTransmisionEmitida, float TotalTransmision)
     {
         if(cantTransmisionEmitida>= TotalTransmision)
         {

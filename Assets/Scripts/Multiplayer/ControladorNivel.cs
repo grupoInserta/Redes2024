@@ -120,7 +120,7 @@ public class ControladorNivel : NetworkBehaviour
 
     private void EspawnearTodosLosJugadores()
     {
-        Debug.Log("Espawnear Todos Los Jugadores ::::");
+        Debug.Log("Espawnear Todos Los Jugadores");
         var connectedClients = NetworkManager.Singleton.ConnectedClientsList;
         foreach (var cliente in connectedClients) // client es un NetworkClient
         {
@@ -157,9 +157,6 @@ public class ControladorNivel : NetworkBehaviour
             StartCoroutine(EncontrarJugadores());
         }
     }
-
-
-
     IEnumerator buscarInventarioCadaSegundo()
     {
         while (!InventarioEncontrado) // Se ejecuta hasta que la condición sea verdadera

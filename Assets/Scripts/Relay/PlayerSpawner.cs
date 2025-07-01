@@ -62,16 +62,7 @@ public class PlayerSpawner : NetworkBehaviour
         contCliente.Value++;
     }
 
-    public void EsconderTodosJugadores()
-    {
-        foreach(GameObject jugador in jugadoresInstanciados)
-        {
-            jugador.GetComponent<PlayerManager>().SetPlayerVisible(false);
-        }
-        
-    }
-
-
+   
     private void OnDestroy()
     {
         if (IsServer && NetworkManager.Singleton != null)

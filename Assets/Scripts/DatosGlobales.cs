@@ -18,7 +18,7 @@ public class DatosGlobales : NetworkBehaviour
     public bool pausado;
     private CinemachineFreeLook freeLookCamera;
     private Camera camPpal;
-
+  
     // Start is called before the first frame update
     void Awake()
     {
@@ -51,7 +51,7 @@ public class DatosGlobales : NetworkBehaviour
 
     private void Update()
     {
-        //return;
+        return;
         // cursor activo dentro de ventana:
         if (freeLookCamera != null)
         {
@@ -99,11 +99,10 @@ public class DatosGlobales : NetworkBehaviour
         }
     }
 
-
     private void OnClientConnected(ulong clientId)
     {
         // Añadir al cliente conectado a la lista sincronizada
-        //ListaIdsClientes.Add(clientId);
+        //ListaIdsClientes.Add(clientId);        
         Debug.Log($"Cliente conectado: {clientId}");
     }
 
@@ -149,10 +148,11 @@ public class DatosGlobales : NetworkBehaviour
 
     private void OrganizarBotones()
     {
+
         string sceneName = SceneManager.GetActiveScene().name;
         if (sceneName != "MenuInicio")
         {
-            miCanvas.transform.GetChild(0).gameObject.SetActive(false); // error al reiniciar
+            miCanvas.transform.GetChild(0).gameObject.SetActive(false); 
             miCanvas.transform.GetChild(1).gameObject.SetActive(false);
             IrInicioButton.gameObject.SetActive(true);
         }
@@ -222,7 +222,6 @@ public class DatosGlobales : NetworkBehaviour
             LoadDisconnectScene(); // No había red activa
         }
     }
-
 
     public void SalirAplicacion()
     {

@@ -5,7 +5,7 @@ using UnityEngine;
 public class Bala : MonoBehaviour
 {
     public Vector3 direccion;
-    private float velocidad;
+    private float Velocidad;
     public float tiempoVida = 5f;
     public AudioSource audioSource;
     public AudioClip[] audioClips;
@@ -39,23 +39,27 @@ public class Bala : MonoBehaviour
         }
     }
 
-    public void ConfigurarVelocidad(float nuevaVelocidad,Vector3 _direccion)
+    public void ConfigurarVelocidad(float velocidad, Vector3 _direccion, Quaternion rotacion)
     {
-        velocidad = nuevaVelocidad;
+        Velocidad = velocidad;
         direccion = _direccion;  // Configuramos la dirección hacia adelante
+        transform.rotation = Quaternion.LookRotation(_direccion);
+      // transform.rotation = rotacion;
     }
 
     private void OnTriggerEnter(Collider other)
     {
+        /*
         if (other.gameObject.CompareTag("Obstaculo"))
         {
             PlaySound(1);// impacto
-        }        
+        }  
+        */
     }
 
         // Update is called once per frame
     void Update()
     {
-        transform.position += direccion * velocidad * Time.deltaTime;
+        transform.position += direccion * Velocidad * Time.deltaTime;
     }
 }

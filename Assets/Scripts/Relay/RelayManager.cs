@@ -10,8 +10,7 @@ using TMPro;
 using Unity.Services.Core;
 
 public class RelayManager : MonoBehaviour
-{
-    public static RelayManager Instance { get; private set; }
+{    public static RelayManager Instance { get; private set; }
     private string joinCode;
     [SerializeField]
     private TextMeshProUGUI textoUnion;
