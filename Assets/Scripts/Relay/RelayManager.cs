@@ -19,6 +19,7 @@ public class RelayManager : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI textoUnionIncorrecta;
 
+
     private void Awake()
     {
         if (Instance == null)

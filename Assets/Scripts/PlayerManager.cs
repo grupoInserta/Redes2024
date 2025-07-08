@@ -7,7 +7,6 @@ using Cinemachine;
 
 public class PlayerManager : NetworkBehaviour
 {
-
     private ulong localClientId;
     private ulong clientId;
     public ulong miClientId { get; set; }
@@ -17,14 +16,14 @@ public class PlayerManager : NetworkBehaviour
     private int ImpactosRecibidos;
     private int maximoImpactos;
     private bool TengoElDocumento;
-    private bool DocumentoTransmitido;    
+    private bool DocumentoTransmitido;
+    private bool sonidoCargandoIniciado;
     private int totalTransmisiones;
     private int contadorCarga;
     public int numBalas;
     [SerializeField]
     private int MaximoBalas = 20;
     public bool Herido { get; set; }
-    public bool RecuperadoHerido { get; set; }
     public bool Desactivado { get; set; }
     private ThirdPersonController miThirdPersonController;
     private Inventario InventarioScript;
@@ -47,7 +46,13 @@ public class PlayerManager : NetworkBehaviour
     private bool posicionadoInicio;
     public CinemachineFreeLook freeLookCamera;
     private CharacterController Ccontroller;
-
+    // SONIDOS
+    [SerializeField]
+    private AudioClip danio;
+    [SerializeField]
+    private AudioClip recargaArma;
+    [SerializeField]
+    private AudioClip reinicioNivelSonido;
 
     private void Awake()
     {
@@ -105,8 +110,7 @@ public class PlayerManager : NetworkBehaviour
             freeLookCamera.LookAt = transform.GetChild(0).transform;
             freeLookCamera.m_YAxis.Value = 0.7f;
             ObtenerInventarioYzonaTransmis();
-            ListoCamara = true; 
-            
+            ListoCamara = true;            
         }
     }
 
@@ -117,15 +121,13 @@ public class PlayerManager : NetworkBehaviour
         // va antes de encontrar la cámara  y solo se ejecuta en las ESCENAS DE NIVEL
         controladorNivel = GameObject.FindGameObjectWithTag("ControladorEscena").GetComponent<ControladorNivel>();
         if (controladorNivel == null) return;
-
         // para saber la zona en el servidor de todos hace falta ser Host en el condicional
-        // Obtener el ClientId del jugador local
-        //localClientId = NetworkManager.Singleton.LocalClientId;
         clientId = _clientId;
         Lugar = controladorNivel.obtenerZonaEnEscena(clientId);
         ComunicarPosicionATodosClientRpc(PosicionInicial, Lugar);
         
     }
+
     /*
     Utilizamos Iniciar porque Start solo se ejecuta en cuanto se spawnea el jugador
         al principio pero si se cambia de escena no, por lo que hay que poner los datos de nuevo */
@@ -143,8 +145,8 @@ public class PlayerManager : NetworkBehaviour
         totalTransmisiones = 0;
         contadorCarga = 0;
         numBalas = MaximoBalas;
+        sonidoCargandoIniciado = false;
         Herido = false;
-        RecuperadoHerido = false;
         Desactivado = true;
         JuegoGanado = false;
         miThirdPersonController = gameObject.GetComponent<ThirdPersonController>();
@@ -180,7 +182,15 @@ public class PlayerManager : NetworkBehaviour
         miCargarEscenasMulti = GameObject.FindGameObjectWithTag("CargarEscenasMulti").GetComponent<CargarEscenasMulti>();
     }
 
-    private void respawnear()
+    IEnumerator ejecutarSonidoTrasRetraso()
+    {
+        yield return new WaitForSeconds(1f); // espera 1 segundo
+        miThirdPersonController.audioSource.volume = 0.5f;
+        miThirdPersonController.audioSource.clip = reinicioNivelSonido;
+        miThirdPersonController.audioSource.Play();
+    }
+
+    private void reiniciarNivel()
     {
         ControladorNivel controladorNivel =  GameObject.FindGameObjectWithTag("ControladorEscena").GetComponent<ControladorNivel>();
         Inventario InventarioScript = GameObject.FindGameObjectWithTag("CanvasInventario").GetComponent<Inventario>();
@@ -190,6 +200,11 @@ public class PlayerManager : NetworkBehaviour
         cantTransmisionEmitida = 0;
         TengoElDocumento = false;
         InventarioScript.textoLlevoDocumento.text = "";
+        pararSonido();
+        if (IsOwner && reinicioNivelSonido != null && miThirdPersonController.audioSource != null)
+        {
+            StartCoroutine(ejecutarSonidoTrasRetraso());
+        }
         ComunicarPosicionATodosServerRpc(PosicionInicial);       
     }
 
@@ -214,12 +229,11 @@ public class PlayerManager : NetworkBehaviour
     {       
         Herido = true;
         ImpactosRecibidos = _ImpactosRecibidos;
-        Debug.Log("IMPACTOS:************************ " + ImpactosRecibidos);
         if (ImpactosRecibidos == maximoImpactos)
         {
             Herido = false;
             ImpactosRecibidos = 0;
-            respawnear();
+            reiniciarNivel();
             Desactivado = true;
         }
         
@@ -228,10 +242,20 @@ public class PlayerManager : NetworkBehaviour
             if(ImpactosRecibidos == 0)
             {
                 NotificarReinicioImpactosServerRpc();
-            }            
+            }  
+            
             // Actualiza panel de vida del jugador local
             Debug.Log($"[Client] Impactos Recibidos: {ImpactosRecibidos}");
-            InventarioScript.mostrarImpactos(ImpactosRecibidos);
+            InventarioScript.mostrarImpactos(ImpactosRecibidos, maximoImpactos);
+        }
+        else
+        {
+            if (miThirdPersonController.audioSource != null && danio != null)
+            {
+                miThirdPersonController.audioSource.volume = 0.7f;
+                miThirdPersonController.audioSource.clip = danio;
+                miThirdPersonController.audioSource.Play();
+            }
         }
     }
 
@@ -263,6 +287,13 @@ public class PlayerManager : NetworkBehaviour
     { // se ejecuta solo en el servidor
 
         ImpactosRecibidos++;
+        if (miThirdPersonController.audioSource != null && danio != null)
+        {
+            miThirdPersonController.audioSource.volume = 0.7f;
+            miThirdPersonController.audioSource.clip = danio;
+            miThirdPersonController.audioSource.Play();
+        }
+
         // para mostrar en el Inventario:
         NotifyDamageClientRpc(ImpactosRecibidos, new ClientRpcParams
         {
@@ -298,7 +329,8 @@ public class PlayerManager : NetworkBehaviour
         InventarioScript.mostrarDocumento(0, totalCantDoc);
         InventarioScript.mostrarTransmision(0, cantTotalTransmision);
         InventarioScript.textoLlevoDocumento.text = "";
-        localClientId = NetworkManager.Singleton.LocalClientId;
+        InventarioScript.resetearSonido();
+       localClientId = NetworkManager.Singleton.LocalClientId;
         if (IsOwner)
         {
             ActualizarScoreServerRpc(Lugar, localClientId, totalTransmisiones);
@@ -406,10 +438,10 @@ public class PlayerManager : NetworkBehaviour
         }
     }
    
-
-    public override void OnNetworkSpawn()
+    private void pararSonido()
     {
-         //colocarInicio();
+        miThirdPersonController.pararSonido();
+        InventarioScript.pararSonido();
     }
 
     // Update is called once per frame
@@ -435,8 +467,7 @@ public class PlayerManager : NetworkBehaviour
                 InventarioScript.mostrarMunicion(numBalas);                
                 InventarioScript.mostrarDocumento(cantidaDocumentoObtenido, totalCantDoc);               
                 InventarioScript.mostrarTransmision(cantTransmisionEmitida, cantTotalTransmision);
-             }
-
+            }
         }
         // Datos en el Canvas Inventario        
         contadorCarga++; // DE MUNICION
@@ -444,12 +475,24 @@ public class PlayerManager : NetworkBehaviour
         if (MunicionTransforms.Count > 0)
         {
             foreach (Transform targetMunicion in MunicionTransforms)
-            {
+            { 
                 float distance = Vector3.Distance(transform.position, targetMunicion.position);
-                if (distance <= detectionRange && numBalas < MaximoBalas)
+
+                if (distance > detectionRange)
                 {
+                    sonidoCargandoIniciado = false;
+                }
+                if (distance <= detectionRange && numBalas < MaximoBalas)
+                {                    
                     targetMunicion.gameObject.GetComponent<Municion>().sumimistarMunicion();
                     numBalas++;
+                    if (!sonidoCargandoIniciado && miThirdPersonController.audioSource != null && recargaArma != null)
+                    {
+                        miThirdPersonController.audioSource.volume = 1f;
+                        miThirdPersonController.audioSource.clip = recargaArma;
+                        miThirdPersonController.audioSource.Play();
+                        sonidoCargandoIniciado = true;
+                    }                    
                 }
             }
         }
@@ -465,17 +508,14 @@ public class PlayerManager : NetworkBehaviour
                     TengoElDocumento = true;
                     // targetDocumento.gameObject.SetActive(false);HAY QUE DESACTIVARLO PARA NO RECOGERLO
                 }
-
             }
         }
         if (targetTransmisor != null)
         {
             float distance = Vector3.Distance(transform.position, targetTransmisor.position);
-
             if (distance <= detectionRange && TengoElDocumento)
             {                
                 cantTransmisionEmitida += velocidadBarra * Time.deltaTime;
-
                 if (cantTransmisionEmitida >= cantTotalTransmision)
                 {
                     totalTransmisiones++; 
@@ -491,9 +531,7 @@ public class PlayerManager : NetworkBehaviour
     }// cierre Update
 
     // si el tiempo se ha terminado tiene mayor score o si el tiempo no ha terminado y ha alcanzado el score maximo
-   
      
-   
 
     // SINCRONIZACIÓN RESTO JUGADORES, POSICION Y ROTACION
     [ServerRpc]

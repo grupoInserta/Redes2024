@@ -6,14 +6,14 @@ using System.Collections;
 using System.Collections.Generic;
 
 /*
-    This file has a commented version with details about how each line works.
+    This file has a commented version with details about how each line works. 
     The commented version contains code that is easier and simpler to read. This file is minified.
 */
 
 
 /// <summary>
 /// Main script for third-person movement of the character in the game.
-/// Make sure that the object that will receive this script (the player)
+/// Make sure that the object that will receive this script (the player) 
 /// has the Player tag and the Character Controller component.
 /// </summary>
 public class ThirdPersonController : NetworkBehaviour
@@ -30,13 +30,14 @@ public class ThirdPersonController : NetworkBehaviour
     [Space]
     [Tooltip("Force that pulls the player down. Changing this value causes all movement, jumping and falling to be changed as well.")]
     public float gravity = 9.8f;
-
     float jumpElapsedTime = 0;
 
     // Player states
     bool isJumping = false;
     bool isSprinting = false;
     bool isCrouching = false;
+    bool apuntando = false;
+    private Vector3 moveDirection;
 
     // Inputs
     float inputHorizontal;
@@ -54,8 +55,7 @@ public class ThirdPersonController : NetworkBehaviour
     // disparos
     [SerializeField] private GameObject Bala;
     private GameObject[] ArrayBalas;
-    [SerializeField] Transform bocaCannon;
-    private float offsetBocaCannon = 0.5f;
+    [SerializeField] public Transform bocaCannon;
     private float fuerzaDisparo = 40f; //20
     private PlayerManager miPlayerManager;
     private int MaximoBalas;
@@ -64,17 +64,26 @@ public class ThirdPersonController : NetworkBehaviour
     public bool pausado;
     private CinemachineFreeLook cam;
     private Camera camPpal;
+    public AudioSource audioSource;
+    public AudioClip disparo;
+    private float rotationSpeed = 5f;
 
     private void Awake()
     {
         Iniciar();
+        audioSource = GetComponent<AudioSource>();
+        audioSource.enabled = true;
     }
 
+    public void pararSonido()
+    {
+        audioSource.Pause();
+    }  
     public void Iniciar()
     {
         miPlayerManager = gameObject.GetComponent<PlayerManager>();
         MaximoBalas = miPlayerManager.obtenerMaxBalas();
-        ArrayBalas = new GameObject[MaximoBalas];
+        ArrayBalas = new GameObject[100];
         contadorBalas = 0;
         pausado = true;
     }
@@ -82,12 +91,11 @@ public class ThirdPersonController : NetworkBehaviour
     /// <summary>
     /// DISPAROS
     /// </summary>
-    [ClientRpc]
+  [ClientRpc]
     private void ShootProjectileClientRpc(Vector3 posicionCannon, Quaternion rotacion, Vector3 direccion)
     {
-
         ArrayBalas[contadorBalas] = Instantiate(Bala, posicionCannon, rotacion);
-        ArrayBalas[contadorBalas].GetComponent<Bala>().ConfigurarVelocidad(fuerzaDisparo, direccion, rotacion);
+        ArrayBalas[contadorBalas].GetComponent<Bala>().ConfigurarVelocidad(fuerzaDisparo, direccion, rotacion, gameObject);
         contadorBalas++;
         miPlayerManager.quitarBala();
     }
@@ -105,7 +113,7 @@ public class ThirdPersonController : NetworkBehaviour
             Debug.Log("miPlayerManager.controladorNivel  no valido");
         }
 
-        float maxHitDistance = 0.3f;     // radio del cilindro (lateral)
+        float maxHitDistance = 1.5f;     // radio del cilindro (lateral)
         float maxRange = 25.0f;
         foreach (var clientPair in NetworkManager.Singleton.ConnectedClients)
         {
@@ -131,27 +139,49 @@ public class ThirdPersonController : NetworkBehaviour
             }
         }
 
-        ShootProjectileClientRpc(bocaCannon.transform.position + new Vector3(0, 0, offsetBocaCannon), bocaCannon.transform.rotation, bocaCannon.transform.forward);
+        ShootProjectileClientRpc(bocaCannon.transform.position , bocaCannon.transform.rotation, bocaCannon.transform.forward);
     }
 
+    [ServerRpc]
+    void comunicarSonidoDisparoServerRpc(Vector3 _posicion)
+    {
+        comunicarSonidoDisparoClientRpc(_posicion);
+    }
 
-
+    [ClientRpc]
+    void comunicarSonidoDisparoClientRpc(Vector3 _posicion)
+    {
+        if (audioSource != null && disparo != null )
+        {
+            float distancia = Vector3.Distance(transform.position, _posicion);
+            if (distancia < 0.5f) return;
+            float volumen = Mathf.Clamp01(1f - (distancia));
+            audioSource.volume = volumen;
+            audioSource.clip = disparo;
+            audioSource.Play();
+        }
+    }
     private void disparar()
     {
         if (!IsOwner) return;
         if (contadorBalas >= MaximoBalas) // vaciar todo de balas
         {
-            ArrayBalas = new GameObject[MaximoBalas];
+            ArrayBalas = new GameObject[100];
             contadorBalas = 0;
         }
+        if(contadorBalas > 0)
+        {
+            audioSource.clip = disparo;
+            audioSource.Play();
+            comunicarSonidoDisparoServerRpc(transform.position);
+        }              
 
         if (miPlayerManager.numBalas > 0)
         {
             RequestShootServerRpc();
-            // IMPLEMENTAR SONIDO??
         }
     }
-
+   
 
     [ServerRpc]
     private void UpdateAnimacionServerRpc(string tipoAnimacion, bool _booleano)
@@ -169,19 +199,18 @@ public class ThirdPersonController : NetworkBehaviour
 
 
     public void HandleAnimation(string tipoAnimacion, bool _booleano)
-    {
-        if (animator != null)
+    { 
+        if(animator != null)
         {
             animator.SetBool(tipoAnimacion, _booleano);
-        }
-
+        }        
     }
 
     // ANIMACIONES Y MOVIMIENTO
     void Start()
     {
-        // cc = GetComponent<CharacterController>();
-        animator = GetComponent<Animator>();
+       // cc = GetComponent<CharacterController>();
+        animator = GetComponent<Animator>();        
         //cc.center = new Vector3(0, cc.height / 2f, 0); AJUSTAR ALTURA
 
 
@@ -222,15 +251,8 @@ public class ThirdPersonController : NetworkBehaviour
 
         if (miPlayerManager.Desactivado == true) return; // solo se maneja movimiento y animacion cuando
                                                          // este activado el manager
-        if (miPlayerManager.Herido)
-        {
-            Estado = "Herido";
-        }
-        else if (miPlayerManager.RecuperadoHerido)
-        {
-            Estado = "RecuperadoHerido";
-        }
-        else if (miPlayerManager.Desactivado)
+        
+       if (miPlayerManager.Desactivado)
         {
             Estado = "Desactivado";
         }
@@ -241,56 +263,78 @@ public class ThirdPersonController : NetworkBehaviour
 
         if (Estado != "Desactivado" && pausado == false && Input.GetMouseButtonDown(0))
         {
-            disparar();
+            disparar();            
         }
         // Input checkers, PARTE del Paquete de Animacion Estandar
         inputHorizontal = Input.GetAxis("Horizontal");
         inputVertical = Input.GetAxis("Vertical");
         inputJump = Input.GetAxis("Jump") == 1f;
-        inputSprint = Input.GetAxis("Fire3") == 1f; // QUE ES?
+        inputSprint = Input.GetAxis("Fire3") == 1f; // QUE ES? 
         // Unfortunately GetAxis does not work with GetKeyDown, so inputs must be taken individually
         inputCrouch = Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.JoystickButton1);
-        // tecla control de la izquierda
+        // tecla Ctrl, de la izquierda 
         // Check if you pressed the crouch input key and change the player's state
-        if (inputCrouch)
+        if ( inputCrouch )
             isCrouching = !isCrouching;
+
+        if (isCrouching || isSprinting || isJumping || cc.velocity.magnitude >= 0.1f)
+        {
+            apuntando = false;
+        }
+        //GetMouseButtonDown(1) una pulsacion
+        if (Input.GetMouseButton(1) && !isJumping && !isSprinting && !isCrouching && cc.velocity.magnitude <= 0.1f) // 1 = botón derecho del ratón
+        {
+            apuntando = true;            
+        }
+        if (Input.GetMouseButtonUp(1) && apuntando) // 1 = botón derecho del ratón
+        {
+            apuntando = false;
+        }
 
         // Run and Crouch animation
         // If dont have animator component, this block wont run
-        if (cc.isGrounded && animator != null)
-        {
+        if ( cc.isGrounded && animator != null )
+        {            
             // Crouch
             // Note: The crouch animation does not shrink the character's collider
             animator.SetBool("crouch", isCrouching);
             UpdateAnimacionServerRpc("crouch", isCrouching);
-
+            Debug.Log("crouchCrouchCfrouch");
             // Run
             float minimumSpeed = 0.9f;
             bool mibooleano = cc.velocity.magnitude > minimumSpeed;
             animator.SetBool("run", mibooleano);
             UpdateAnimacionServerRpc("run", mibooleano);
-
             // Sprint
 
-            isSprinting = cc.velocity.magnitude > minimumSpeed && inputSprint;
-            animator.SetBool("sprint", isSprinting);
+            isSprinting = cc.velocity.magnitude > minimumSpeed && inputSprint;           
+            animator.SetBool("sprint", isSprinting );
             UpdateAnimacionServerRpc("sprint", isSprinting);
         }
 
         // Jump animation
-        if (animator != null && cc != null)
-
-            animator.SetBool("air", cc.isGrounded == false);
-        bool booleano = cc.isGrounded == false;
-        UpdateAnimacionServerRpc("air", booleano);
-
+        if( animator != null && cc != null)
+            animator.SetBool("air", cc.isGrounded == false );        
+            bool booleano = cc.isGrounded == false;
+            UpdateAnimacionServerRpc("air", booleano);       
 
         // Handle can jump or not
-        if (inputJump && cc.isGrounded)
+        if ( inputJump && cc.isGrounded )
         {
             isJumping = true;
             // Disable crounching when jumping
-            //isCrouching = false;
+            //isCrouching = false; 
+        }
+
+        if (apuntando)
+        {      
+            animator.SetBool("apuntar", true);
+            UpdateAnimacionServerRpc("apuntar", true);
+        }
+        else
+        {
+            animator.SetBool("apuntar", false);
+            UpdateAnimacionServerRpc("apuntar", false);
         }
         HeadHittingDetect();
     }
@@ -300,63 +344,82 @@ public class ThirdPersonController : NetworkBehaviour
     private void FixedUpdate()
     {
         if (cc == null) return;
-        // Sprinting velocity boost or crounching desacelerate
-        float velocityAdittion = 0;
-        if (isSprinting)
-            velocityAdittion = sprintAdittion;
-        if (isCrouching)
-            velocityAdittion = -(velocity * 0.50f); // -50% velocity
+            // Sprinting velocity boost or crounching desacelerate
+            float velocityAdittion = 0;
+            if ( isSprinting )
+                velocityAdittion = sprintAdittion;
+            if (isCrouching)
+                velocityAdittion =  - (velocity * 0.50f); // -50% velocity
 
-        // Direction movement
-        float directionX = inputHorizontal * (velocity + velocityAdittion) * Time.deltaTime;
-        float directionZ = inputVertical * (velocity + velocityAdittion) * Time.deltaTime;
-        float directionY = 0;
+            // Direction movement
+            float directionX = inputHorizontal * (velocity + velocityAdittion) * Time.deltaTime;
+            float directionZ = inputVertical * (velocity + velocityAdittion) * Time.deltaTime;
+            float directionY = 0;
 
-        // Jump handler
-        if (isJumping)
-        {
-            // Apply inertia and smoothness when climbing the jump
-            // It is not necessary when descending, as gravity itself will gradually pulls
-            directionY = Mathf.SmoothStep(jumpForce, jumpForce * 0.30f, jumpElapsedTime / jumpTime) * Time.deltaTime;
-
-            // Jump timer
-            jumpElapsedTime += Time.deltaTime;
-            if (jumpElapsedTime >= jumpTime)
+            // Jump handler
+            if ( isJumping )
             {
-                isJumping = false;
-                jumpElapsedTime = 0;
+                // Apply inertia and smoothness when climbing the jump
+                // It is not necessary when descending, as gravity itself will gradually pulls
+                directionY = Mathf.SmoothStep(jumpForce, jumpForce * 0.30f, jumpElapsedTime / jumpTime) * Time.deltaTime;
+
+                // Jump timer
+                jumpElapsedTime += Time.deltaTime;
+                if (jumpElapsedTime >= jumpTime)
+                {
+                    isJumping = false;
+                    jumpElapsedTime = 0;
+                }
+            }
+
+            // Add gravity to Y axis
+            directionY = directionY - gravity * Time.deltaTime;        
+            // --- Character rotation --- 
+            Vector3 forward = Camera.main.transform.forward;
+            Vector3 right = Camera.main.transform.right;
+
+            forward.y = 0;
+            right.y = 0;
+
+            forward.Normalize();
+            right.Normalize();
+
+            // Relate the front with the Z direction (depth) and right with X (lateral movement)
+            forward = forward * directionZ;
+            right = right * directionX;
+
+            if (directionX != 0 || directionZ != 0)
+            {
+                float angle = Mathf.Atan2(forward.x + right.x, forward.z + right.z) * Mathf.Rad2Deg;
+                if (!apuntando) {
+                    Quaternion rotation = Quaternion.Euler(0, angle, 0);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 0.15f);
+                }                                   
+            }
+
+        if (apuntando)
+        {
+           // GIRO SOBRE SU EJE DIRECCION OPUESTA A CAMARA CUANDO ESTA APUNTADO
+            Vector3 cameraForward = camPpal.transform.forward;
+            cameraForward.y = 0; // Ignorar la componente Y para que el movimiento sea en el plano horizontal
+            cameraForward.Normalize();
+            moveDirection = cameraForward; // La direccion es siempre forward 
+            if (moveDirection != Vector3.zero)
+            {
+                moveDirection.x *= 2f; // Amplifica el bajandoeje X para más sensibilidad lateral
+                moveDirection = moveDirection.normalized;
+                //transform.rotation = Quaternion.LookRotation(moveDirection);
+                Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
             }
         }
 
-        // Add gravity to Y axis
-        directionY = directionY - gravity * Time.deltaTime;
-        // --- Character rotation ---
-        Vector3 forward = Camera.main.transform.forward;
-        Vector3 right = Camera.main.transform.right;
+            // --- End rotation ---        
+            Vector3 verticalDirection = Vector3.up * directionY;
+            Vector3 horizontalDirection = forward + right;
 
-        forward.y = 0;
-        right.y = 0;
-
-        forward.Normalize();
-        right.Normalize();
-
-        // Relate the front with the Z direction (depth) and right with X (lateral movement)
-        forward = forward * directionZ;
-        right = right * directionX;
-
-        if (directionX != 0 || directionZ != 0)
-        {
-            float angle = Mathf.Atan2(forward.x + right.x, forward.z + right.z) * Mathf.Rad2Deg;
-            Quaternion rotation = Quaternion.Euler(0, angle, 0);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 0.15f);
-        }
-
-        // --- End rotation ---        
-        Vector3 verticalDirection = Vector3.up * directionY;
-        Vector3 horizontalDirection = forward + right;
-
-        Vector3 moviment = verticalDirection + horizontalDirection;
-        cc.Move(moviment);
+            Vector3 moviment = verticalDirection + horizontalDirection;
+            cc.Move(moviment);
     }
 
 

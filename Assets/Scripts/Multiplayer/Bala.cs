@@ -2,64 +2,46 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class Bala : MonoBehaviour
 {
     public Vector3 direccion;
     private float Velocidad;
     public float tiempoVida = 5f;
-    public AudioSource audioSource;
-    public AudioClip[] audioClips;
+    public GameObject explosionPrefab;
+    private GameObject Explosion;
+    private GameObject Jugador;
 
     private void Awake()
-    {
-        
-        if (audioSource == null)
-        {
-            audioSource = GetComponent<AudioSource>();
-            audioSource.enabled = true;
-            audioSource.Play();
-        }         
+    {        
+             
     }
     void Start()
-    {
+    {        
+        Explosion = Instantiate(explosionPrefab, transform.position, Quaternion.identity);
+        Destroy(Explosion, 3f);       
+        Explosion.transform.position = transform.position;
         Destroy(gameObject, tiempoVida);
-        PlaySound(0);// disparo
     }
+    
 
-    public void PlaySound(int index)
-    {
-        if (index >= 0 && index < audioClips.Length)
-        {
-            audioSource.clip = audioClips[index];
-            audioSource.Play();
-        }
-        else
-        {
-            Debug.LogWarning("Índice de sonido fuera de rango");
-        }
-    }
-
-    public void ConfigurarVelocidad(float velocidad, Vector3 _direccion, Quaternion rotacion)
+    public void ConfigurarVelocidad(float velocidad, Vector3 _direccion, Quaternion rotacion, GameObject _jugador)
     {
         Velocidad = velocidad;
         direccion = _direccion;  // Configuramos la dirección hacia adelante
         transform.rotation = Quaternion.LookRotation(_direccion);
-      // transform.rotation = rotacion;
+        Jugador = _jugador;
+        // transform.rotation = rotacion;
     }
 
-    private void OnTriggerEnter(Collider other)
-    {
-        /*
-        if (other.gameObject.CompareTag("Obstaculo"))
-        {
-            PlaySound(1);// impacto
-        }  
-        */
-    }
-
-        // Update is called once per frame
+    
+    // Update is called once per frame
     void Update()
     {
         transform.position += direccion * Velocidad * Time.deltaTime;
+        if (Explosion != null)
+        {
+            Explosion.transform.position = Jugador.GetComponent<ThirdPersonController>().bocaCannon.transform.position;
+        }
     }
 }

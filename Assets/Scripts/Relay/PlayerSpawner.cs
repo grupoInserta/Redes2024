@@ -3,14 +3,12 @@ using UnityEngine;
 using System.Collections.Generic;
 
 public class PlayerSpawner : NetworkBehaviour
-{
+{ // ESTE COMPONENTE SOLO ESTÁ EN LA ESCENA INICIORELAY
     [SerializeField] private GameObject[] playerPrefabs;
     [SerializeField] private Transform[] spawnPoints;
     private List <GameObject> jugadoresInstanciados;
-    //private ulong contCliente = 0;
     public NetworkVariable<int> contCliente = new NetworkVariable<int>();
     private MultiplayerManager multiplayerManager;
-
 
     void Awake()
     {

@@ -6,32 +6,56 @@ using Unity.Netcode;
 
 public class Inventario : NetworkBehaviour
 {
-    private Image Rojo;
+    public Image Rojo;
     private TextMeshProUGUI textoImpactos;
     private TextMeshProUGUI textoMunicion;
     public TextMeshProUGUI textoLlevoDocumento;
     private TextMeshProUGUI textoTransmision;
     public TextMeshProUGUI textoScoreLocal { get; set; }
     public TextMeshProUGUI textoScoreContrario { get; set; }
-
-    // poner barra progreso
+    // poner barras progreso
     [Header("UI Components")]
     public Image fillBarDoc; // Asignar el componente de relleno
     public Image fillBarTrans; // Asignar el componente de relleno
+    public Image fillBarSalud; // Asignar el componente de relleno
     [Header("Progress Values")]
     private float currentValueDoc; // Valor actual
     private float currentValueTrans;
+    private float currentValueSalud;
+
+    // sonidos
+
+    [SerializeField]
+    private AudioClip obtDoc;
+    [SerializeField]
+    private AudioClip transmision;
+    [SerializeField]
+    private AudioClip ok;
+    private AudioSource audioSource;
+    private bool transmitiendo;
+    private bool copiandoDoc;
+    private bool documentoTransmitido;
+    private bool documentoCopiado;
+    private DamageFlashEffect miDamageFlashEffect;
+
     void Awake()
     {
-        Rojo = transform.GetChild(0).gameObject.GetComponent<Image>();
-        SetPanelOpacity(0f);// ROJO
-        // Inventario es:  transform.GetChild(1)
+     
+       
+        //SetPanelOpacity(0f);// ROJO
         textoImpactos = transform.GetChild(1).GetChild(3).GetComponent<TextMeshProUGUI>();        
         textoMunicion = transform.GetChild(1).GetChild(5).GetComponent<TextMeshProUGUI>();        
         textoLlevoDocumento = transform.GetChild(1).GetChild(6).GetComponent<TextMeshProUGUI>();        
         textoTransmision = transform.GetChild(1).GetChild(9).GetComponent<TextMeshProUGUI>();
         textoScoreLocal = transform.GetChild(3).GetChild(2).GetComponent<TextMeshProUGUI>();
         textoScoreContrario = transform.GetChild(3).GetChild(3).GetComponent<TextMeshProUGUI>();
+        audioSource = GetComponent<AudioSource>();
+        audioSource.enabled = true;
+        transmitiendo = false;
+        copiandoDoc = false;
+        documentoTransmitido = false;
+        documentoCopiado = false;
+        miDamageFlashEffect = GetComponent<DamageFlashEffect>();
     }
 
     public void SetPanelOpacity(float alpha)
@@ -61,8 +85,7 @@ public class Inventario : NetworkBehaviour
         if(_contrario != 1000)
         {
             textoScoreContrario.text = _contrario.ToString();
-        }
-        
+        }        
     }
 
     // actualizaciones del Inventario:
@@ -70,45 +93,107 @@ public class Inventario : NetworkBehaviour
     {
         textoMunicion.text = numBalas.ToString();
     }
-    public void mostrarImpactos(int impactosRecibidos)
+    public void mostrarImpactos(int _impactosRecibidos, int _maximoImpactos)
     {
-        textoImpactos.text = impactosRecibidos.ToString();
+        miDamageFlashEffect.MostrarFlash(Rojo);             
+        //textoImpactos.text = impactosRecibidos.ToString();
+        float maximoImpactos = (float) _maximoImpactos;
+        float impactosRecibidos = (float) _impactosRecibidos;
+        UpdateProgressSalud(impactosRecibidos, maximoImpactos);
     }
-    public void mostrarDocumento(float cantDocObtenido, float total)
+
+    public void pararSonido()
     {
-        if(cantDocObtenido >= total)
+        audioSource.Pause();
+    }
+
+    public void mostrarDocumento(float cantDocObtenido, float total)//que se recibe
+    {
+        if(cantDocObtenido >= total && copiandoDoc == true)
         {
-            textoLlevoDocumento.text = "OK ";// cambiar por el num de documentos ?
+            textoLlevoDocumento.text = "OK";//
+
+            if (audioSource != null && ok != null)
+            {
+                audioSource.Pause();
+                audioSource.clip = ok;
+                audioSource.volume = 1f;
+                audioSource.Play();
+            }
+            documentoCopiado = true;            
+            copiandoDoc = false;
         }
 
         UpdateProgressDoc((float)cantDocObtenido, (float)total);
-        //IMPLEMENTAR BARRA PROGRESO 
+        if (copiandoDoc == false && cantDocObtenido > 0 && !documentoCopiado)
+        {
+            copiandoDoc = true;
+            if (audioSource != null && obtDoc != null)
+            {
+                audioSource.volume = 0.2f;
+                audioSource.clip = obtDoc;
+                audioSource.Play();
+            }
+        }
     }
-    public void mostrarTransmision(float cantTransmisionEmitida, float TotalTransmision)
+
+    public void resetearSonido()
     {
-        if(cantTransmisionEmitida>= TotalTransmision)
+        documentoTransmitido = false;
+        documentoCopiado = false;
+        textoTransmision.text = "";
+        textoLlevoDocumento.text = "";
+    }
+
+    public void mostrarTransmision(float cantTransmisionEmitida, float TotalTransmision)
+    {   
+        if (cantTransmisionEmitida >= TotalTransmision-1 && transmitiendo == true)
         {
             textoTransmision.text = "OK";
-        }       
-        //IMPLEMENTAR BARRA PROGRESO 2
-        UpdateProgressTrans((float)cantTransmisionEmitida, (float)TotalTransmision);
+            if (audioSource != null && ok != null)
+            {
+                audioSource.Pause();
+                audioSource.clip = ok;
+                audioSource.volume = 1f;
+                audioSource.Play();
+            }
+            transmitiendo = false;
+            documentoTransmitido = true;
+        }
+        //IMPLEMENTAR BARRA PROGRESO
+        Debug.Log("cantTransmisionEmitida" + cantTransmisionEmitida);
+        UpdateProgressTrans(cantTransmisionEmitida,TotalTransmision);
+        if ( transmitiendo == false && cantTransmisionEmitida > 0 && !documentoTransmitido)
+        {
+            transmitiendo = true;
+            if (audioSource != null && transmision != null)
+            {
+                audioSource.volume = 0.2f;
+                audioSource.clip = transmision;
+                audioSource.Play();
+            }           
+        }
     }
 
     // BARRAS DE PROGRESO:
-// Método para actualizar la barra de progreso
-private void UpdateProgressDoc(float current, float maxValue) { 
-    currentValueDoc = Mathf.Clamp(current, 0, maxValue); // Asegura que esté dentro del rango
-    fillBarDoc.fillAmount = currentValueDoc / maxValue; // Calcula el porcentaje
-}
-private void UpdateProgressTrans(float current, float maxValue)
-{
-    currentValueTrans = Mathf.Clamp(current, 0, maxValue); // Asegura que esté dentro del rango
-    fillBarTrans.fillAmount = currentValueTrans / maxValue; // Calcula el porcentaje
-}
+    // Método para actualizar la barra de progreso
+
+    private void UpdateProgressSalud(float impactosRecibidos, float totalPermitidos)
+    {      
+        currentValueSalud = Mathf.Clamp(impactosRecibidos, 0, totalPermitidos);
+        fillBarSalud.fillAmount = 1f - (currentValueSalud / totalPermitidos);
+    }
+
+    private void UpdateProgressDoc(float current, float maxValue) { 
+        currentValueDoc = Mathf.Clamp(current, 0, maxValue); // Asegura que esté dentro del rango
+        fillBarDoc.fillAmount = currentValueDoc / maxValue; // Calcula el porcentaje
+    }
+    private void UpdateProgressTrans(float current, float maxValue)
+    {
+        currentValueTrans = Mathf.Clamp(current, 0, maxValue); // Asegura que esté dentro del rango
+        fillBarTrans.fillAmount = currentValueTrans / maxValue; // Calcula el porcentaje
+    }
 
 // Update is called once per frame
-void Update()
-    {
 
-    }
 }
