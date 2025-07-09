@@ -32,15 +32,14 @@ public class Inventario : NetworkBehaviour
     [SerializeField]
     private AudioClip ok;
     private AudioSource audioSource;
-    private bool transmitiendo;
-    private bool copiandoDoc;
+    public bool transmitiendo { get; set; }
+    public bool copiandoDoc { get; set; }
     private bool documentoTransmitido;
     private bool documentoCopiado;
     private DamageFlashEffect miDamageFlashEffect;
 
     void Awake()
     {
-     
        
         //SetPanelOpacity(0f);// ROJO
         textoImpactos = transform.GetChild(1).GetChild(3).GetComponent<TextMeshProUGUI>();        
@@ -104,17 +103,18 @@ public class Inventario : NetworkBehaviour
 
     public void pararSonido()
     {
-        audioSource.Pause();
+        audioSource.Pause();       
     }
 
-    public void mostrarDocumento(float cantDocObtenido, float total)//que se recibe
+    public void mostrarDocumento(float cantDocObtenido, float total)//QUE SE RECIBE!!!
     {
-        if(cantDocObtenido >= total && copiandoDoc == true)
-        {
+        if (cantDocObtenido >= total && copiandoDoc == true)
+        {            
             textoLlevoDocumento.text = "OK";//
 
             if (audioSource != null && ok != null)
             {
+                Debug.Log("OIR SONIDO OBTENCIAON DOc");
                 audioSource.Pause();
                 audioSource.clip = ok;
                 audioSource.volume = 1f;
@@ -137,8 +137,11 @@ public class Inventario : NetworkBehaviour
         }
     }
 
-    public void resetearSonido()
+    public void resetearDatos()
     {
+        transmitiendo = false;
+        copiandoDoc = false;
+        documentoCopiado = false;
         documentoTransmitido = false;
         documentoCopiado = false;
         textoTransmision.text = "";
@@ -146,7 +149,7 @@ public class Inventario : NetworkBehaviour
     }
 
     public void mostrarTransmision(float cantTransmisionEmitida, float TotalTransmision)
-    {   
+    {
         if (cantTransmisionEmitida >= TotalTransmision-1 && transmitiendo == true)
         {
             textoTransmision.text = "OK";
@@ -161,7 +164,6 @@ public class Inventario : NetworkBehaviour
             documentoTransmitido = true;
         }
         //IMPLEMENTAR BARRA PROGRESO
-        Debug.Log("cantTransmisionEmitida" + cantTransmisionEmitida);
         UpdateProgressTrans(cantTransmisionEmitida,TotalTransmision);
         if ( transmitiendo == false && cantTransmisionEmitida > 0 && !documentoTransmitido)
         {

@@ -59,7 +59,7 @@ public class ThirdPersonController : NetworkBehaviour
     private float fuerzaDisparo = 40f; //20
     private PlayerManager miPlayerManager;
     private int MaximoBalas;
-    private int contadorBalas;
+    private int contadorBalas; // DISPARADAS!!!
     public bool soyLocal;
     public bool pausado;
     private CinemachineFreeLook cam;
@@ -169,7 +169,7 @@ public class ThirdPersonController : NetworkBehaviour
             ArrayBalas = new GameObject[100];
             contadorBalas = 0;
         }
-        if(contadorBalas > 0)
+        if(contadorBalas < MaximoBalas)
         {
             audioSource.clip = disparo;
             audioSource.Play();
@@ -299,7 +299,6 @@ public class ThirdPersonController : NetworkBehaviour
             // Note: The crouch animation does not shrink the character's collider
             animator.SetBool("crouch", isCrouching);
             UpdateAnimacionServerRpc("crouch", isCrouching);
-            Debug.Log("crouchCrouchCfrouch");
             // Run
             float minimumSpeed = 0.9f;
             bool mibooleano = cc.velocity.magnitude > minimumSpeed;

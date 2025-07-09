@@ -34,6 +34,10 @@ public class MultiplayerManager : MonoBehaviour
     {
         try
         {
+            DatosGlobales.Instance.InicioRelay.GetComponent<Image>().enabled = false;
+            
+            //DatosGlobales.Instance.InicioRelay.enabled = false;
+            //DatosGlobales.Instance.Lobby.enabled = true;
             Debug.Log("Inicializando Relay para Host...");
             // Configurar Relay
             //string relaySetupSuccess = await RelayManager.Instance.CreateRelayHost(4);
@@ -51,7 +55,11 @@ public class MultiplayerManager : MonoBehaviour
     }
 
     public async void StartClient()
-    {       
+    {
+        DatosGlobales.Instance.InicioRelay.GetComponent<Image>().enabled = false;
+        
+        //DatosGlobales.Instance.InicioRelay.enabled = false;
+        //DatosGlobales.Instance.Lobby.enabled = true;
         hostButton.gameObject.SetActive(false);
         clientButton.gameObject.SetActive(false);
         CodUnionIntro.gameObject.SetActive(false);

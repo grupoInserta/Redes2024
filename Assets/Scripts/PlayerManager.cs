@@ -185,22 +185,24 @@ public class PlayerManager : NetworkBehaviour
     IEnumerator ejecutarSonidoTrasRetraso()
     {
         yield return new WaitForSeconds(1f); // espera 1 segundo
-        miThirdPersonController.audioSource.volume = 0.5f;
+        miThirdPersonController.audioSource.volume = 0.3f;
         miThirdPersonController.audioSource.clip = reinicioNivelSonido;
         miThirdPersonController.audioSource.Play();
     }
 
     private void reiniciarNivel()
-    {
+    { //:::::::
         ControladorNivel controladorNivel =  GameObject.FindGameObjectWithTag("ControladorEscena").GetComponent<ControladorNivel>();
         Inventario InventarioScript = GameObject.FindGameObjectWithTag("CanvasInventario").GetComponent<Inventario>();
         localClientId = NetworkManager.Singleton.LocalClientId;
         PosicionInicial = controladorNivel.obtenerPosicionEnEscena(localClientId);
         cantidaDocumentoObtenido = 0;
         cantTransmisionEmitida = 0;
+        DocumentoTransmitido = false;
         TengoElDocumento = false;
         InventarioScript.textoLlevoDocumento.text = "";
         pararSonido();
+        InventarioScript.resetearDatos();
         if (IsOwner && reinicioNivelSonido != null && miThirdPersonController.audioSource != null)
         {
             StartCoroutine(ejecutarSonidoTrasRetraso());
@@ -239,24 +241,21 @@ public class PlayerManager : NetworkBehaviour
         
         if (IsOwner)
         {
-            if(ImpactosRecibidos == 0)
-            {
-                NotificarReinicioImpactosServerRpc();
-            }  
-            
-            // Actualiza panel de vida del jugador local
-            Debug.Log($"[Client] Impactos Recibidos: {ImpactosRecibidos}");
-            InventarioScript.mostrarImpactos(ImpactosRecibidos, maximoImpactos);
-        }
-        else
-        {
             if (miThirdPersonController.audioSource != null && danio != null)
             {
                 miThirdPersonController.audioSource.volume = 0.7f;
                 miThirdPersonController.audioSource.clip = danio;
                 miThirdPersonController.audioSource.Play();
             }
-        }
+            if (ImpactosRecibidos == 0)
+            {
+                NotificarReinicioImpactosServerRpc();
+            } 
+            
+            // Actualiza panel de vida del jugador local
+            Debug.Log($"[Client] Impactos Recibidos: {ImpactosRecibidos}");
+            InventarioScript.mostrarImpactos(ImpactosRecibidos, maximoImpactos);
+        }        
     }
 
     [ServerRpc]
@@ -286,15 +285,10 @@ public class PlayerManager : NetworkBehaviour
     public void HerirCliente()
     { // se ejecuta solo en el servidor
 
-        ImpactosRecibidos++;
-        if (miThirdPersonController.audioSource != null && danio != null)
-        {
-            miThirdPersonController.audioSource.volume = 0.7f;
-            miThirdPersonController.audioSource.clip = danio;
-            miThirdPersonController.audioSource.Play();
-        }
+        ImpactosRecibidos++;     
 
         // para mostrar en el Inventario:
+
         NotifyDamageClientRpc(ImpactosRecibidos, new ClientRpcParams
         {
             Send = new ClientRpcSendParams
@@ -323,14 +317,14 @@ public class PlayerManager : NetworkBehaviour
     }  
 
 
-    private void resetearInventario()
+    private void actualizarInventario()
     {
         Debug.Log("RESETEO INVENTARIO");
         InventarioScript.mostrarDocumento(0, totalCantDoc);
         InventarioScript.mostrarTransmision(0, cantTotalTransmision);
         InventarioScript.textoLlevoDocumento.text = "";
-        InventarioScript.resetearSonido();
-       localClientId = NetworkManager.Singleton.LocalClientId;
+        InventarioScript.resetearDatos();
+        localClientId = NetworkManager.Singleton.LocalClientId;
         if (IsOwner)
         {
             ActualizarScoreServerRpc(Lugar, localClientId, totalTransmisiones);
@@ -455,8 +449,7 @@ public class PlayerManager : NetworkBehaviour
         if (Desactivado) return;
         DetectarTiempoTerminado();
         if (IsOwner && (Lugar == "Posicion1" || Lugar == "Posicion2"))
-        {
-            
+        {            
             //SINCRONIZAR
             SincronizarPosicionServerRpc(transform.position);// sincronizar es mantener los objetos en posiciones persisitentes en todas las visualizaciones del juego por parte los jugadores.
             SincronizarRotacionServerRpc(transform.rotation);
@@ -509,6 +502,16 @@ public class PlayerManager : NetworkBehaviour
                     // targetDocumento.gameObject.SetActive(false);HAY QUE DESACTIVARLO PARA NO RECOGERLO
                 }
             }
+            else if(InventarioScript.copiandoDoc)
+            {
+                cantidaDocumentoObtenido = 0;
+                cantTransmisionEmitida = 0;
+                DocumentoTransmitido = false;
+                TengoElDocumento = false;
+                InventarioScript.textoLlevoDocumento.text = "";
+                pararSonido();
+                InventarioScript.resetearDatos();                
+            }
         }
         if (targetTransmisor != null)
         {
@@ -520,10 +523,19 @@ public class PlayerManager : NetworkBehaviour
                 {
                     totalTransmisiones++; 
                     DocumentoTransmitido = true;
-                    resetearInventario();
+                    actualizarInventario();
                     cantidaDocumentoObtenido = 0;
                     cantTransmisionEmitida = 0;
                     TengoElDocumento = false;
+                }
+                else if (InventarioScript.transmitiendo) //NUEVO,REVISAR
+                { //::::::::::::::::::::::::::::::::::::..                  
+                    /*
+                    DocumentoTransmitido = false;                    
+                    InventarioScript.textoLlevoDocumento.text = "";
+                    pararSonido();
+                    InventarioScript.resetearDatos();
+                    */
                 }
             }
         }

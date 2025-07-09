@@ -13,11 +13,16 @@ public class DatosGlobales : NetworkBehaviour
     public List<string> EscenasJugadas = new List<string>();
     private Transform miCanvas;
     public Button IrInicioButton;
+    public Button RelayButton;
     public Button SalirButton;
+    public SpriteRenderer GifMenu;
+    public Image InicioRelay;
+    
     private string disconnectSceneName = "MenuInicio"; // Nombre de la escena de desconexión
     public bool pausado;
     private CinemachineFreeLook freeLookCamera;
     private Camera camPpal;
+
   
     // Start is called before the first frame update
     void Awake()
@@ -134,6 +139,29 @@ public class DatosGlobales : NetworkBehaviour
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         EscenaActual = scene.name;
+        Debug.Log(EscenaActual);
+        if(EscenaActual == "MenuInicio")
+        {
+            GifMenu.enabled = true;
+        }
+        else
+        {
+            GifMenu.enabled = false;
+        }
+
+        if(EscenaActual == "InicioRelay")
+        {
+            InicioRelay.GetComponent<Image>().enabled = true;
+        }
+        else
+        {
+            //InicioRelay.enabled = false;
+            InicioRelay.GetComponent<Image>().enabled = false;
+        }
+
+
+        
+        
         OrganizarBotones();
         if (freeLookCamera == null)
         {
@@ -146,23 +174,7 @@ public class DatosGlobales : NetworkBehaviour
         pausado = false;
     }
 
-    private void OrganizarBotones()
-    {
-
-        string sceneName = SceneManager.GetActiveScene().name;
-        if (sceneName != "MenuInicio")
-        {
-            miCanvas.transform.GetChild(0).gameObject.SetActive(false); 
-            miCanvas.transform.GetChild(1).gameObject.SetActive(false);
-            IrInicioButton.gameObject.SetActive(true);
-        }
-        else
-        {
-            IrInicioButton.gameObject.SetActive(false);
-            miCanvas.transform.GetChild(0).gameObject.SetActive(true);
-            miCanvas.transform.GetChild(1).gameObject.SetActive(true);
-        }
-    }
+    
 
     private void Start()
     {
@@ -236,6 +248,22 @@ public class DatosGlobales : NetworkBehaviour
         //ListaIdsClientes.Dispose();
         // Cargar la escena de desconexión
         LoadDisconnectScene();
+    }
+
+    private void OrganizarBotones()
+    {
+        string sceneName = SceneManager.GetActiveScene().name;
+        if (sceneName == "MenuInicio")
+        {
+            IrInicioButton.gameObject.SetActive(false);
+            RelayButton.gameObject.SetActive(true);//relay button
+            //miCanvas.transform.GetChild(1).gameObject.SetActive(false);
+        }
+        else if (sceneName == "InicioRelay")
+        {
+            RelayButton.gameObject.SetActive(false);
+            IrInicioButton.gameObject.SetActive(true);
+        }
     }
 
     private void LoadDisconnectScene()
