@@ -1,14 +1,11 @@
 using Unity.Netcode;
 using UnityEngine;
 
-/* MIRAR DE QUITARLO*/
-
 public class SceneChangeHandler : NetworkBehaviour
 {
     private void OnEnable()
-    {       
+    {
         NetworkManager.Singleton.SceneManager.OnSceneEvent += HandleSceneEvent;// para cuando se abandona una escena
-    
     }
 
     private void OnDisable()
@@ -35,14 +32,4 @@ public class SceneChangeHandler : NetworkBehaviour
 
         }
     }
-
-
-   
-    
-
 }
-
-
-
-
-

@@ -5,12 +5,11 @@ using TMPro;
 using Unity.Netcode;
 using UnityEngine.SceneManagement;
 
-
 public class ControladorNivel : NetworkBehaviour
 {
     public string EscenaActual { get; set; }
     public Dictionary<int, PlayerManager> jugadores { get; set; }
-    public CountdownTimer miCountdownTimer { get; set; }   
+    public CountdownTimer miCountdownTimer { get; set; }
     public int contadorLocalScore;
     public int contadorContrarioScore;
     [SerializeField]
@@ -25,10 +24,9 @@ public class ControladorNivel : NetworkBehaviour
     private VictoriaDerrota miVictoriaDerrota;
     private miNetworkManager MiNetworkManager;
 
-
     // Start is called before the first frame update
     private void Start()
-    {       
+    {
         miCountdownTimer = GetComponent<CountdownTimer>();
         miVictoriaDerrota = GetComponent<VictoriaDerrota>();
         MiNetworkManager = GetComponent<miNetworkManager>();
@@ -37,8 +35,7 @@ public class ControladorNivel : NetworkBehaviour
         {
             NetworkManager.Singleton.SceneManager.OnLoadComplete += OnSceneLoadComplete;
         }
-    }   
-
+    }
 
     private void OnDisable()
     {
@@ -69,11 +66,9 @@ public class ControladorNivel : NetworkBehaviour
             Zona = "Posicion1";
         }
         PlayerManagerLocalZona = Zona;
-
         return Zona;
     }
 
-    
     private string GetLocalPlayerZona() // ES PARA OBTENER EL LUGAR/ONA DEL PLAYER LOCAL
     { // solo se puede hacer en el SERVIDOR
         string Lugar;
@@ -92,7 +87,6 @@ public class ControladorNivel : NetworkBehaviour
 
     public void IncrementarContadorScore(string zona, ulong _id)
     { // viene de un clientRpc...
-
         string JugadorManagerZona = GetLocalPlayerZona();
         if (JugadorManagerZona == zona)
         {
@@ -137,7 +131,7 @@ public class ControladorNivel : NetworkBehaviour
             if (IsServer)
             {
                 EspawnearTodosLosJugadores();
-            }           
+            }
             contadorLocalScore = 0;
             contadorContrarioScore = 0;
             InventarioObjeto = GameObject.FindGameObjectWithTag("CanvasInventario");
@@ -150,7 +144,8 @@ public class ControladorNivel : NetworkBehaviour
             else
             {
                 InventarioEncontrado = false;
-                StartCoroutine(buscarInventarioCadaSegundo());            }
+                StartCoroutine(buscarInventarioCadaSegundo());
+            }
             //-----
             keepRunning = true;
             if (!IsServer) return;
@@ -171,7 +166,6 @@ public class ControladorNivel : NetworkBehaviour
             yield return new WaitForSeconds(1f); // Espera 1 segundo
         }
     }
-
 
     IEnumerator EncontrarJugadores()
     {
@@ -200,12 +194,9 @@ public class ControladorNivel : NetworkBehaviour
         }
         Debug.Log("¡Acción ejecutada después de 1 segundo!");
     }
-        
 
     public void PartidaTerminada(ulong idGanador)
     {
-         miVictoriaDerrota.EndGame(idGanador);
+        miVictoriaDerrota.EndGame(idGanador);
     }
-    
-
 }

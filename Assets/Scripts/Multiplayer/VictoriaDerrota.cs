@@ -6,24 +6,23 @@ public class VictoriaDerrota : NetworkBehaviour
 {
     public void EndGame(ulong winnerClientId)
     {
-
         Debug.Log("winnerClientId: " + winnerClientId);
-            foreach (var client in NetworkManager.Singleton.ConnectedClients)
+        foreach (var client in NetworkManager.Singleton.ConnectedClients)
+        {
+            ulong clientId = client.Key;
+            if (clientId == winnerClientId && winnerClientId != 1000)
             {
-                ulong clientId = client.Key;
-                if (clientId == winnerClientId && winnerClientId != 1000)
-                {
-                    SendPlayerToScene(clientId, "Victoria");
-                }
-                else if(winnerClientId != 1000)
-                {
-                    SendPlayerToScene(clientId, "Derrota");
-                }
-                else
-                {
-                SendPlayerToScene(clientId, "Empate");
-                }
+                SendPlayerToScene(clientId, "Victoria");
             }
+            else if (winnerClientId != 1000)
+            {
+                SendPlayerToScene(clientId, "Derrota");
+            }
+            else
+            {
+                SendPlayerToScene(clientId, "Empate");
+            }
+        }
     }
 
     private void SendPlayerToScene(ulong _clientId, string sceneName)
@@ -37,7 +36,6 @@ public class VictoriaDerrota : NetworkBehaviour
     [ClientRpc]
     private void SendSceneChangeClientRpc(ulong targetClientId, string sceneName, ClientRpcParams clientRpcParams = default)
     {
-        
         if (NetworkManager.Singleton.LocalClientId == targetClientId)
         {
             //NetworkManager.Singleton.SceneManager.LoadScene(sceneName, LoadSceneMode.Single);

@@ -39,7 +39,7 @@ public class DamageFlashEffect : MonoBehaviour
     public void MostrarFlash(Image rojo)
     {
         if (rojo == null) return;
-                
+
         damageImage = rojo;
         // Establece un rojo fuerte con opacidad total
         damageImage.color = new Color(1, 0, 0, 0.6f);

@@ -14,16 +14,9 @@ public class Municion : MonoBehaviour
 
     public void sumimistarMunicion()
     {
-        if(maximoUnidades - unidadesActuales < 0)
+        if (maximoUnidades - unidadesActuales < 0)
         {
             unidadesActuales--;
         }
-         
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }

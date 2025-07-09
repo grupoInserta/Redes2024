@@ -26,9 +26,9 @@ public class CountdownTimer : NetworkBehaviour
     [ServerRpc]
     public void mostrarTiempoServerRpc(string tiempo, bool _tiempoterminado)
     {
-        mostrarTiempoClientRpc( tiempo, _tiempoterminado);
+        mostrarTiempoClientRpc(tiempo, _tiempoterminado);
         tiempoterminado = _tiempoterminado;
-    }       
+    }
 
     private System.Collections.IEnumerator StartCountdown()
     {
@@ -41,7 +41,7 @@ public class CountdownTimer : NetworkBehaviour
             if (IsOwner)
             {
                 mostrarTiempoServerRpc(textoReloj, tiempoterminado);
-            }          
+            }
 
             // Espera un segundo
             yield return new WaitForSeconds(1);
@@ -63,4 +63,3 @@ public class CountdownTimer : NetworkBehaviour
         return string.Format("{0:00}:{1:00}", minutes, remainingSeconds);
     }
 }
-

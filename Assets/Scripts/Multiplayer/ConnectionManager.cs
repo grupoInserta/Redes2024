@@ -1,14 +1,13 @@
 using Unity.Netcode;
 using UnityEngine;
 
-
 public class ConnectionManager : MonoBehaviour
 {
     // Referencia a un Text UI en la escena
     CargarEscenasMulti cargaEscenas;
 
     private void Start()
-    {       
+    {
         // Suscribirse al evento de desconexión o fallo de conexión
         NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
         NetworkManager.Singleton.OnTransportFailure += OnTransportFailure;
@@ -31,7 +30,6 @@ public class ConnectionManager : MonoBehaviour
         DisplayErrorMessage("Disconnected from server.");
         NetworkManager.Singleton.Shutdown();
         cargaEscenas.CargarEscenaNombre("Error");
-        
     }
 
     // Método que se llama cuando hay un fallo de transporte (problemas de conexión)
@@ -42,9 +40,7 @@ public class ConnectionManager : MonoBehaviour
 
     // Método para mostrar el mensaje de error
     private void DisplayErrorMessage(string message)
-    {      
-            Debug.Log(message);        
+    {
+        Debug.Log(message);
     }
 }
-
-

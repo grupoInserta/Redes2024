@@ -20,9 +20,9 @@ public class MultiplayerManager : MonoBehaviour
 
     private void Start()
     {
-        Debug.Log("INICIO HOST");   
+        Debug.Log("INICIO HOST");
         playerSpawner = gameObject.GetComponent<PlayerSpawner>();
-        cargarEscenasMulti = gameObject.GetComponent<CargarEscenasMulti>();        
+        cargarEscenasMulti = gameObject.GetComponent<CargarEscenasMulti>();
         // Asigna los eventos de los botones
         hostButton.onClick.AddListener(StartHost);
         clientButton.onClick.AddListener(StartClient);
@@ -35,7 +35,7 @@ public class MultiplayerManager : MonoBehaviour
         try
         {
             DatosGlobales.Instance.InicioRelay.GetComponent<Image>().enabled = false;
-            
+
             //DatosGlobales.Instance.InicioRelay.enabled = false;
             //DatosGlobales.Instance.Lobby.enabled = true;
             Debug.Log("Inicializando Relay para Host...");
@@ -46,7 +46,6 @@ public class MultiplayerManager : MonoBehaviour
             clientButton.gameObject.SetActive(false);
             CodUnionIntro.gameObject.SetActive(false);
             unirseButton.gameObject.SetActive(true);
-            
         }
         catch (System.Exception ex)
         {
@@ -57,7 +56,7 @@ public class MultiplayerManager : MonoBehaviour
     public async void StartClient()
     {
         DatosGlobales.Instance.InicioRelay.GetComponent<Image>().enabled = false;
-        
+
         //DatosGlobales.Instance.InicioRelay.enabled = false;
         //DatosGlobales.Instance.Lobby.enabled = true;
         hostButton.gameObject.SetActive(false);
@@ -67,7 +66,7 @@ public class MultiplayerManager : MonoBehaviour
         Debug.Log("INICIO CLIENTE: " + joinCode);
         await RelayManager.Instance.JoinRelay(joinCode);
         textoUnion.gameObject.SetActive(false);
-        unirseButton.gameObject.SetActive(true);        
+        unirseButton.gameObject.SetActive(true);
     }
 
     public void mostrarJugar()
@@ -77,7 +76,7 @@ public class MultiplayerManager : MonoBehaviour
 
     private void Jugar()
     {
-        cargarEscenasMulti.CargarEscenaAleat();        
+        cargarEscenasMulti.CargarEscenaAleat();
         TextoCargandoNivel.gameObject.SetActive(true);
         LobbyTexto.gameObject.SetActive(false);
         jugarButton.gameObject.SetActive(false);
@@ -90,8 +89,7 @@ public class MultiplayerManager : MonoBehaviour
             LobbyTexto.gameObject.SetActive(true);
             playerSpawner.SpawnPlayer();
             unirseButton.gameObject.SetActive(false);
-            textoUnion.gameObject.SetActive(false);           
-        }        
+            textoUnion.gameObject.SetActive(false);
+        }
     }
-    
 }

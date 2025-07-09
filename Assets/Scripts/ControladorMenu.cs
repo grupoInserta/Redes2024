@@ -22,12 +22,4 @@ public class ControladorMenu : MonoBehaviour
     {
         miCargaEscenasMulti.CargarEscenaNombre("InicioRelay");
     }
-
- 
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }

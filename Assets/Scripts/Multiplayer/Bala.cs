@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
 public class Bala : MonoBehaviour
 {
     public Vector3 direccion;
@@ -12,18 +11,13 @@ public class Bala : MonoBehaviour
     private GameObject Explosion;
     private GameObject Jugador;
 
-    private void Awake()
-    {        
-             
-    }
     void Start()
-    {        
+    {
         Explosion = Instantiate(explosionPrefab, transform.position, Quaternion.identity);
-        Destroy(Explosion, 3f);       
+        Destroy(Explosion, 3f);
         Explosion.transform.position = transform.position;
         Destroy(gameObject, tiempoVida);
     }
-    
 
     public void ConfigurarVelocidad(float velocidad, Vector3 _direccion, Quaternion rotacion, GameObject _jugador)
     {
@@ -34,7 +28,6 @@ public class Bala : MonoBehaviour
         // transform.rotation = rotacion;
     }
 
-    
     // Update is called once per frame
     void Update()
     {

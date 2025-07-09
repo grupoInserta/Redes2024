@@ -2,7 +2,7 @@ using UnityEngine;
 using Unity.Netcode;
 
 public class miNetworkManager : NetworkBehaviour
-{    
+{
     public GameObject[] JugadorPrefabs;
     [SerializeField]
     private ControladorNivel miControladorNivel;
@@ -20,8 +20,6 @@ public class miNetworkManager : NetworkBehaviour
         //
         ulong localClientId = NetworkManager.Singleton.LocalClientId;
         Vector3 PosicionInicial = miControladorNivel.obtenerPosicionEnEscena(clientId);
-        playerInstance.GetComponent<PlayerManager>().colocarInicio(PosicionInicial , clientId);
-
+        playerInstance.GetComponent<PlayerManager>().colocarInicio(PosicionInicial, clientId);
     }
-
 }

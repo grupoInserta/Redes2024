@@ -1,4 +1,3 @@
-
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -72,15 +71,14 @@ public class PlayerManager : NetworkBehaviour
             Desactivado = true;
             SetPlayerVisible(true);
         }
-        else if(DatosGlobales.Instance.EscenaActual == "MenuInicio")
+        else if (DatosGlobales.Instance.EscenaActual == "MenuInicio")
         {
-            miThirdPersonController.Estado = "Desactivado";            
+            miThirdPersonController.Estado = "Desactivado";
         }
     }
-   
 
     public void SetPlayerVisible(bool visible)
-    {     
+    {
         MeshRenderer[] renderers = transform.GetComponentsInChildren<MeshRenderer>();
         foreach (MeshRenderer renderer in renderers)
         {
@@ -90,7 +88,7 @@ public class PlayerManager : NetworkBehaviour
         foreach (var renderer in skinnedMeshRenderers)
         {
             renderer.enabled = visible;
-        }      
+        }
     }
 
     private void ObtenerCamara()
@@ -110,7 +108,7 @@ public class PlayerManager : NetworkBehaviour
             freeLookCamera.LookAt = transform.GetChild(0).transform;
             freeLookCamera.m_YAxis.Value = 0.7f;
             ObtenerInventarioYzonaTransmis();
-            ListoCamara = true;            
+            ListoCamara = true;
         }
     }
 
@@ -125,7 +123,6 @@ public class PlayerManager : NetworkBehaviour
         clientId = _clientId;
         Lugar = controladorNivel.obtenerZonaEnEscena(clientId);
         ComunicarPosicionATodosClientRpc(PosicionInicial, Lugar);
-        
     }
 
     /*
@@ -176,8 +173,8 @@ public class PlayerManager : NetworkBehaviour
             {
                 targetTransmisor = GameObject.FindGameObjectWithTag("Transmisor2").transform;
             }
-            Debug.Log("EL LUGAR ES: " + Lugar); 
-        }        
+            Debug.Log("EL LUGAR ES: " + Lugar);
+        }
         targetDocumento = GameObject.FindGameObjectWithTag("Documento").transform;
         miCargarEscenasMulti = GameObject.FindGameObjectWithTag("CargarEscenasMulti").GetComponent<CargarEscenasMulti>();
     }
@@ -192,7 +189,7 @@ public class PlayerManager : NetworkBehaviour
 
     private void reiniciarNivel()
     { //:::::::
-        ControladorNivel controladorNivel =  GameObject.FindGameObjectWithTag("ControladorEscena").GetComponent<ControladorNivel>();
+        ControladorNivel controladorNivel = GameObject.FindGameObjectWithTag("ControladorEscena").GetComponent<ControladorNivel>();
         Inventario InventarioScript = GameObject.FindGameObjectWithTag("CanvasInventario").GetComponent<Inventario>();
         localClientId = NetworkManager.Singleton.LocalClientId;
         PosicionInicial = controladorNivel.obtenerPosicionEnEscena(localClientId);
@@ -207,7 +204,7 @@ public class PlayerManager : NetworkBehaviour
         {
             StartCoroutine(ejecutarSonidoTrasRetraso());
         }
-        ComunicarPosicionATodosServerRpc(PosicionInicial);       
+        ComunicarPosicionATodosServerRpc(PosicionInicial);
     }
 
     public int obtenerMaxBalas()
@@ -225,10 +222,9 @@ public class PlayerManager : NetworkBehaviour
     }
 
     //  DAÑOS Y DISPAROS
-
     [ClientRpc]
     void NotifyDamageClientRpc(int _ImpactosRecibidos, ClientRpcParams rpcParams = default)
-    {       
+    {
         Herido = true;
         ImpactosRecibidos = _ImpactosRecibidos;
         if (ImpactosRecibidos == maximoImpactos)
@@ -238,7 +234,6 @@ public class PlayerManager : NetworkBehaviour
             reiniciarNivel();
             Desactivado = true;
         }
-        
         if (IsOwner)
         {
             if (miThirdPersonController.audioSource != null && danio != null)
@@ -250,12 +245,12 @@ public class PlayerManager : NetworkBehaviour
             if (ImpactosRecibidos == 0)
             {
                 NotificarReinicioImpactosServerRpc();
-            } 
-            
+            }
+
             // Actualiza panel de vida del jugador local
             Debug.Log($"[Client] Impactos Recibidos: {ImpactosRecibidos}");
             InventarioScript.mostrarImpactos(ImpactosRecibidos, maximoImpactos);
-        }        
+        }
     }
 
     [ServerRpc]
@@ -284,8 +279,7 @@ public class PlayerManager : NetworkBehaviour
 
     public void HerirCliente()
     { // se ejecuta solo en el servidor
-
-        ImpactosRecibidos++;     
+        ImpactosRecibidos++;
 
         // para mostrar en el Inventario:
 
@@ -295,18 +289,18 @@ public class PlayerManager : NetworkBehaviour
             {
                 TargetClientIds = new ulong[] { OwnerClientId }
             }
-        }); 
-    }  
+        });
+    }
 
     [ClientRpc]
     public void ComunicarPosicionATodosClientRpc(Vector3 PosicionInicial, string lugar)
     {
         SetPlayerVisible(true);
         posicionadoInicio = true;
-        Ccontroller.enabled = false;        
+        Ccontroller.enabled = false;
         transform.position = PosicionInicial;
         Ccontroller.enabled = true;
-        TengoElDocumento = false;        
+        TengoElDocumento = false;
         Lugar = lugar;
     }
 
@@ -314,8 +308,7 @@ public class PlayerManager : NetworkBehaviour
     public void ComunicarPosicionATodosServerRpc(Vector3 PosicionInicial)
     {
         ComunicarPosicionATodosClientRpc(PosicionInicial, Lugar);
-    }  
-
+    }
 
     private void actualizarInventario()
     {
@@ -330,20 +323,19 @@ public class PlayerManager : NetworkBehaviour
             ActualizarScoreServerRpc(Lugar, localClientId, totalTransmisiones);
         }
     }
-   
 
     [ServerRpc]
     private void ActualizarScoreServerRpc(string zona, ulong _localClientId, int _transmisiones)
     {
-        Debug.Log("ACTUALIZO SERVER EN ZONA: " + zona);     
-        ActualizarScoreClientRpc(zona, _localClientId, _transmisiones);        
+        Debug.Log("ACTUALIZO SERVER EN ZONA: " + zona);
+        ActualizarScoreClientRpc(zona, _localClientId, _transmisiones);
     }
 
     [ClientRpc]
     public void ActualizarScoreClientRpc(string zona, ulong _localClientId, int _transmisiones)
     {
         Debug.Log("actualizo el score del que ha ganado en todos los clientes");
-        Debug.Log("lugar: " + Lugar +" zona: " +zona+ "localclientId: "+ _localClientId + "Num transmisiones:" + _transmisiones);
+        Debug.Log("lugar: " + Lugar + " zona: " + zona + "localclientId: " + _localClientId + "Num transmisiones:" + _transmisiones);
         ControladorNivel controladorNivel = GameObject.FindGameObjectWithTag("ControladorEscena").GetComponent<ControladorNivel>();
         Inventario InventarioScript = GameObject.FindGameObjectWithTag("CanvasInventario").GetComponent<Inventario>();
         localClientId = NetworkManager.Singleton.LocalClientId;
@@ -351,19 +343,19 @@ public class PlayerManager : NetworkBehaviour
         if (Lugar == zona)
         {
             InventarioScript.IncrementarContadorScore(_transmisiones, 1000);
-            controladorNivel.contadorLocalScore = _transmisiones;             
+            controladorNivel.contadorLocalScore = _transmisiones;
         }
         else
         {
-            InventarioScript.IncrementarContadorScore(1000, _transmisiones);            
+            InventarioScript.IncrementarContadorScore(1000, _transmisiones);
             controladorNivel.contadorContrarioScore = _transmisiones;
-        }        
+        }
         comprobarGanarPartida(localClientId, _transmisiones);
     }
 
     private void comprobarGanarPartida(ulong _localClientId, int _transmisiones)
     {
-        Debug.Log("COMPRUEBO GANAR PARTIDA.. y tiempoterminado: "+ TiempoTerminado);
+        Debug.Log("COMPRUEBO GANAR PARTIDA.. y tiempoterminado: " + TiempoTerminado);
         if (!TiempoTerminado)
         {
             if (_transmisiones >= numeroMaximoTransmisiones)
@@ -381,7 +373,7 @@ public class PlayerManager : NetworkBehaviour
                 ganarPartidaServerRpc(_localClientId);
                 Debug.Log("GANAR PARTIDA--------------" + _localClientId);
             }
-        }       
+        }
     }
 
     [ServerRpc]
@@ -389,7 +381,7 @@ public class PlayerManager : NetworkBehaviour
     {
         ganarPartidaClientRpc(); // hacer que no se acualicen todas las acciones del jugador
         ControladorNivel controladorNivel = GameObject.FindGameObjectWithTag("ControladorEscena").GetComponent<ControladorNivel>();
-        controladorNivel.PartidaTerminada(_localClientId);             
+        controladorNivel.PartidaTerminada(_localClientId);
     }
 
     [ClientRpc]
@@ -423,15 +415,15 @@ public class PlayerManager : NetworkBehaviour
             {
                 empatarPartidaServerRpc();
                 Debug.Log("empato por tiempo como host o client...");
-
-            }  else if(controladorNivel.contadorLocalScore > controladorNivel.contadorContrarioScore)
+            }
+            else if (controladorNivel.contadorLocalScore > controladorNivel.contadorContrarioScore)
             {
-                    ActualizarScoreServerRpc(Lugar, localClientId, totalTransmisiones);
-                    Debug.Log("gano por tiempo como host o client...en la zona:" + Lugar);              
-            } 
+                ActualizarScoreServerRpc(Lugar, localClientId, totalTransmisiones);
+                Debug.Log("gano por tiempo como host o client...en la zona:" + Lugar);
+            }
         }
     }
-   
+
     private void pararSonido()
     {
         miThirdPersonController.pararSonido();
@@ -449,7 +441,7 @@ public class PlayerManager : NetworkBehaviour
         if (Desactivado) return;
         DetectarTiempoTerminado();
         if (IsOwner && (Lugar == "Posicion1" || Lugar == "Posicion2"))
-        {            
+        {
             //SINCRONIZAR
             SincronizarPosicionServerRpc(transform.position);// sincronizar es mantener los objetos en posiciones persisitentes en todas las visualizaciones del juego por parte los jugadores.
             SincronizarRotacionServerRpc(transform.rotation);
@@ -457,8 +449,8 @@ public class PlayerManager : NetworkBehaviour
             // inventario:
             if (InventarioScript != null)
             {
-                InventarioScript.mostrarMunicion(numBalas);                
-                InventarioScript.mostrarDocumento(cantidaDocumentoObtenido, totalCantDoc);               
+                InventarioScript.mostrarMunicion(numBalas);
+                InventarioScript.mostrarDocumento(cantidaDocumentoObtenido, totalCantDoc);
                 InventarioScript.mostrarTransmision(cantTransmisionEmitida, cantTotalTransmision);
             }
         }
@@ -468,7 +460,7 @@ public class PlayerManager : NetworkBehaviour
         if (MunicionTransforms.Count > 0)
         {
             foreach (Transform targetMunicion in MunicionTransforms)
-            { 
+            {
                 float distance = Vector3.Distance(transform.position, targetMunicion.position);
 
                 if (distance > detectionRange)
@@ -476,7 +468,7 @@ public class PlayerManager : NetworkBehaviour
                     sonidoCargandoIniciado = false;
                 }
                 if (distance <= detectionRange && numBalas < MaximoBalas)
-                {                    
+                {
                     targetMunicion.gameObject.GetComponent<Municion>().sumimistarMunicion();
                     numBalas++;
                     if (!sonidoCargandoIniciado && miThirdPersonController.audioSource != null && recargaArma != null)
@@ -485,7 +477,7 @@ public class PlayerManager : NetworkBehaviour
                         miThirdPersonController.audioSource.clip = recargaArma;
                         miThirdPersonController.audioSource.Play();
                         sonidoCargandoIniciado = true;
-                    }                    
+                    }
                 }
             }
         }
@@ -502,7 +494,7 @@ public class PlayerManager : NetworkBehaviour
                     // targetDocumento.gameObject.SetActive(false);HAY QUE DESACTIVARLO PARA NO RECOGERLO
                 }
             }
-            else if(InventarioScript.copiandoDoc)
+            else if (InventarioScript.copiandoDoc)
             {
                 cantidaDocumentoObtenido = 0;
                 cantTransmisionEmitida = 0;
@@ -510,40 +502,40 @@ public class PlayerManager : NetworkBehaviour
                 TengoElDocumento = false;
                 InventarioScript.textoLlevoDocumento.text = "";
                 pararSonido();
-                InventarioScript.resetearDatos();                
+                InventarioScript.resetearDatos();
             }
         }
+
+        // TRANSMISION DOCUMENTO
         if (targetTransmisor != null)
         {
             float distance = Vector3.Distance(transform.position, targetTransmisor.position);
             if (distance <= detectionRange && TengoElDocumento)
-            {                
+            {
                 cantTransmisionEmitida += velocidadBarra * Time.deltaTime;
                 if (cantTransmisionEmitida >= cantTotalTransmision)
                 {
-                    totalTransmisiones++; 
+                    totalTransmisiones++;
                     DocumentoTransmitido = true;
                     actualizarInventario();
                     cantidaDocumentoObtenido = 0;
                     cantTransmisionEmitida = 0;
                     TengoElDocumento = false;
                 }
-                else if (InventarioScript.transmitiendo) //NUEVO,REVISAR
-                { //::::::::::::::::::::::::::::::::::::..                  
-                    /*
-                    DocumentoTransmitido = false;                    
-                    InventarioScript.textoLlevoDocumento.text = "";
-                    pararSonido();
-                    InventarioScript.resetearDatos();
-                    */
-                }
+            }
+            else if (distance > detectionRange && TengoElDocumento && InventarioScript.transmitiendo) //NUEVO,REVISAR
+            {
+                InventarioScript.transmitiendo = false;
+                cantTransmisionEmitida = 0;
+                InventarioScript.resetearDatosTransmisionCortada();
+                Debug.Log("Me salgo en medio de la transmision");
+                pararSonido();
             }
         }
 
     }// cierre Update
 
     // si el tiempo se ha terminado tiene mayor score o si el tiempo no ha terminado y ha alcanzado el score maximo
-     
 
     // SINCRONIZACIÓN RESTO JUGADORES, POSICION Y ROTACION
     [ServerRpc]
@@ -576,7 +568,3 @@ public class PlayerManager : NetworkBehaviour
         }
     }
 }
-
-
-
-

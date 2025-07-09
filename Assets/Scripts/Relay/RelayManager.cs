@@ -10,15 +10,15 @@ using TMPro;
 using Unity.Services.Core;
 
 public class RelayManager : MonoBehaviour
-{    public static RelayManager Instance { get; private set; }
+{
+    public static RelayManager Instance { get; private set; }
     private string joinCode;
     [SerializeField]
     private TextMeshProUGUI textoUnion;
     [SerializeField]
-    private TMP_InputField CodUnionIntro;   
+    private TMP_InputField CodUnionIntro;
     [SerializeField]
     private TextMeshProUGUI textoUnionIncorrecta;
-
 
     private void Awake()
     {
@@ -44,7 +44,8 @@ public class RelayManager : MonoBehaviour
             }
 
             Debug.Log("Unity Services inicializado y jugador autenticado.");
-            if(codigoJoin == false) {
+            if (codigoJoin == false)
+            {
                 joinCode = await CreateRelayHost(4);
                 textoUnion.text = joinCode;
             }
@@ -53,7 +54,7 @@ public class RelayManager : MonoBehaviour
                 joinCode = CodUnionIntro.text;
             }
             Debug.Log($"Join Code: {joinCode}");
-            
+
         }
         catch (System.Exception e)
         {
@@ -62,39 +63,39 @@ public class RelayManager : MonoBehaviour
     }
 
     public async Task<string> CreateRelayHost(int maxPlayers)
-    {        
+    {
         try
-        {               
+        {
             Allocation allocation = await RelayService.Instance.CreateAllocationAsync(maxPlayers); // Máximo de conexiones
-            
+
             if (allocation != null)
-             {
-                 int port = allocation.RelayServer?.Port ?? 0;
-                 joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId); // Extraer el Guid de Allocation
-                 Debug.Log($"Relay creado con Código de unión: {joinCode}");
-                 var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
-                 transport.SetRelayServerData(
-                 allocation.RelayServer.IpV4,
-                 (ushort)port,
-                 allocation.AllocationIdBytes,
-                 allocation.Key,
-                 allocation.ConnectionData
-             );
-                 NetworkManager.Singleton.StartHost();
-                 return joinCode;                
+            {
+                int port = allocation.RelayServer?.Port ?? 0;
+                joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId); // Extraer el Guid de Allocation
+                Debug.Log($"Relay creado con Código de unión: {joinCode}");
+                var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+                transport.SetRelayServerData(
+                allocation.RelayServer.IpV4,
+                (ushort)port,
+                allocation.AllocationIdBytes,
+                allocation.Key,
+                allocation.ConnectionData
+            );
+                NetworkManager.Singleton.StartHost();
+                return joinCode;
             }
-             else
-             {
-                 Debug.LogError("Error: La asignación de Relay es nula.");
-                 return null;
-             }            
-         }
-         catch (RelayServiceException e)
-         {
-             Debug.LogError($"Error al crear Relay: {e.Message}");
-             return null;
-         }     
-              
+            else
+            {
+                Debug.LogError("Error: La asignación de Relay es nula.");
+                return null;
+            }
+        }
+        catch (RelayServiceException e)
+        {
+            Debug.LogError($"Error al crear Relay: {e.Message}");
+            return null;
+        }
+
     }
 
     public async Task JoinRelay(string joinCode) // con parametro es distinta de la de abajo
@@ -120,7 +121,7 @@ public class RelayManager : MonoBehaviour
             );
             // Iniciar cliente en la red
             NetworkManager.Singleton.StartClient();
-            Debug.Log("Cliente conectado al Relay exitosamente.");           
+            Debug.Log("Cliente conectado al Relay exitosamente.");
         }
         catch (RelayServiceException e)
         {
@@ -137,11 +138,10 @@ public class RelayManager : MonoBehaviour
         textoUnionIncorrecta.gameObject.SetActive(false);
     }
 
-
     public async Task JoinRelay()
-    {        
+    {
         string ClientjoinCode = CodUnionIntro.text;
-        Debug.Log("intento conectarme como cliente con codigo "+ ClientjoinCode);
+        Debug.Log("intento conectarme como cliente con codigo " + ClientjoinCode);
         if (!string.IsNullOrEmpty(ClientjoinCode))
         {
             await RelayManager.Instance.JoinRelay(ClientjoinCode);
@@ -151,7 +151,5 @@ public class RelayManager : MonoBehaviour
         {
             Debug.LogError("El Join Code está vacío. Introduce un código válido.");
         }
-
     }
 }
-

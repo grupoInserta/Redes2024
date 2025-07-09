@@ -18,5 +18,4 @@ public class ExplosionGrande : MonoBehaviour
     }
 
     // Update is called once per frame
-
 }

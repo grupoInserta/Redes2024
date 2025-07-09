@@ -10,7 +10,7 @@ public class OpcionesControlador : MonoBehaviour
     [SerializeField]
     private GameObject volver_btn;
     private CargarEscenasMulti miCargarEscenas;
- 
+
     // Start is called before the first frame update
     void Start()
     {
@@ -19,7 +19,7 @@ public class OpcionesControlador : MonoBehaviour
 
     public void cambiarResolucion(int index)
     {
-        string selectedText = resolutionDropdown.options[index].text;     
+        string selectedText = resolutionDropdown.options[index].text;
         char delimitador = 'x';
         string[] dimensiones = selectedText.Split(delimitador);
         int x = int.Parse(dimensiones[0]);
@@ -27,9 +27,8 @@ public class OpcionesControlador : MonoBehaviour
         Screen.SetResolution(x, y, false);
     }
 
-    public void IrAMenu() {
+    public void IrAMenu()
+    {
         miCargarEscenas.CargarEscenaNombre("Menu");
     }
-
-
 }

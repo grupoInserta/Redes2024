@@ -9,7 +9,7 @@ using Cinemachine;
 public class DatosGlobales : NetworkBehaviour
 {
     public static DatosGlobales Instance { get; private set; }
-    public string EscenaActual  { get; private set; }
+    public string EscenaActual { get; private set; }
     public List<string> EscenasJugadas = new List<string>();
     private Transform miCanvas;
     public Button IrInicioButton;
@@ -17,13 +17,12 @@ public class DatosGlobales : NetworkBehaviour
     public Button SalirButton;
     public SpriteRenderer GifMenu;
     public Image InicioRelay;
-    
+
     private string disconnectSceneName = "MenuInicio"; // Nombre de la escena de desconexión
     public bool pausado;
     private CinemachineFreeLook freeLookCamera;
     private Camera camPpal;
 
-  
     // Start is called before the first frame update
     void Awake()
     {
@@ -55,8 +54,7 @@ public class DatosGlobales : NetworkBehaviour
     }
 
     private void Update()
-    {//@@@@@@
-        return;
+    {
         // cursor activo dentro de ventana:
         if (freeLookCamera != null)
         {
@@ -91,7 +89,6 @@ public class DatosGlobales : NetworkBehaviour
             Cursor.lockState = inside ? CursorLockMode.None : CursorLockMode.Locked;
         }
     }
-
 
     public override void OnNetworkSpawn()
     {
@@ -140,7 +137,7 @@ public class DatosGlobales : NetworkBehaviour
     {
         EscenaActual = scene.name;
         Debug.Log(EscenaActual);
-        if(EscenaActual == "MenuInicio")
+        if (EscenaActual == "MenuInicio")
         {
             GifMenu.enabled = true;
         }
@@ -149,7 +146,7 @@ public class DatosGlobales : NetworkBehaviour
             GifMenu.enabled = false;
         }
 
-        if(EscenaActual == "InicioRelay")
+        if (EscenaActual == "InicioRelay")
         {
             InicioRelay.GetComponent<Image>().enabled = true;
         }
@@ -159,9 +156,6 @@ public class DatosGlobales : NetworkBehaviour
             InicioRelay.GetComponent<Image>().enabled = false;
         }
 
-
-        
-        
         OrganizarBotones();
         if (freeLookCamera == null)
         {
@@ -173,8 +167,6 @@ public class DatosGlobales : NetworkBehaviour
         }
         pausado = false;
     }
-
-    
 
     private void Start()
     {
@@ -201,7 +193,6 @@ public class DatosGlobales : NetworkBehaviour
     }
 
     // zona de desconexión:
-    // 
     private void EsperarDesconexionCliente(ulong clientId)
     {
         Debug.Log($"Cliente {clientId} desconectado (callback)");

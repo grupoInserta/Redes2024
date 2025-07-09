@@ -6,7 +6,7 @@ public class PlayerSpawner : NetworkBehaviour
 { // ESTE COMPONENTE SOLO ESTÁ EN LA ESCENA INICIORELAY
     [SerializeField] private GameObject[] playerPrefabs;
     [SerializeField] private Transform[] spawnPoints;
-    private List <GameObject> jugadoresInstanciados;
+    private List<GameObject> jugadoresInstanciados;
     public NetworkVariable<int> contCliente = new NetworkVariable<int>();
     private MultiplayerManager multiplayerManager;
 
@@ -17,8 +17,7 @@ public class PlayerSpawner : NetworkBehaviour
         jugadoresInstanciados = new List<GameObject>();
     }
 
-    public void SpawnPlayer() //
-                              // DE UNO EN UNO CADA VEZ CLIC EN BOTON UNIRSE
+    public void SpawnPlayer()                           // DE UNO EN UNO CADA VEZ CLIC EN BOTON UNIRSE
     {
         // if (!IsOwner) return; // Asegúrate de que solo el cliente propietario pueda ejecutar esto
 
@@ -32,8 +31,6 @@ public class PlayerSpawner : NetworkBehaviour
             Debug.LogWarning("El jugador ya ha sido spawneado.");
         }
     }
-
-   
 
     [ServerRpc(RequireOwnership = false)]
     private void SpawnPlayerServerRpc(ServerRpcParams serverRpcParams = default)
@@ -60,7 +57,6 @@ public class PlayerSpawner : NetworkBehaviour
         contCliente.Value++;
     }
 
-   
     private void OnDestroy()
     {
         if (IsServer && NetworkManager.Singleton != null)
@@ -76,5 +72,4 @@ public class PlayerSpawner : NetworkBehaviour
             multiplayerManager.mostrarJugar();
         }
     }
-
 }

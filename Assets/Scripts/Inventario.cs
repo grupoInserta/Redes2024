@@ -1,4 +1,3 @@
-
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -40,11 +39,10 @@ public class Inventario : NetworkBehaviour
 
     void Awake()
     {
-       
         //SetPanelOpacity(0f);// ROJO
-        textoImpactos = transform.GetChild(1).GetChild(3).GetComponent<TextMeshProUGUI>();        
-        textoMunicion = transform.GetChild(1).GetChild(5).GetComponent<TextMeshProUGUI>();        
-        textoLlevoDocumento = transform.GetChild(1).GetChild(6).GetComponent<TextMeshProUGUI>();        
+        textoImpactos = transform.GetChild(1).GetChild(3).GetComponent<TextMeshProUGUI>();
+        textoMunicion = transform.GetChild(1).GetChild(5).GetComponent<TextMeshProUGUI>();
+        textoLlevoDocumento = transform.GetChild(1).GetChild(6).GetComponent<TextMeshProUGUI>();
         textoTransmision = transform.GetChild(1).GetChild(9).GetComponent<TextMeshProUGUI>();
         textoScoreLocal = transform.GetChild(3).GetChild(2).GetComponent<TextMeshProUGUI>();
         textoScoreContrario = transform.GetChild(3).GetChild(3).GetComponent<TextMeshProUGUI>();
@@ -77,14 +75,14 @@ public class Inventario : NetworkBehaviour
 
     public void IncrementarContadorScore(int _local, int _contrario)
     {
-        if(_local != 1000)
+        if (_local != 1000)
         {
             textoScoreLocal.text = _local.ToString();
         }
-        if(_contrario != 1000)
+        if (_contrario != 1000)
         {
             textoScoreContrario.text = _contrario.ToString();
-        }        
+        }
     }
 
     // actualizaciones del Inventario:
@@ -94,22 +92,22 @@ public class Inventario : NetworkBehaviour
     }
     public void mostrarImpactos(int _impactosRecibidos, int _maximoImpactos)
     {
-        miDamageFlashEffect.MostrarFlash(Rojo);             
+        miDamageFlashEffect.MostrarFlash(Rojo);
         //textoImpactos.text = impactosRecibidos.ToString();
-        float maximoImpactos = (float) _maximoImpactos;
-        float impactosRecibidos = (float) _impactosRecibidos;
+        float maximoImpactos = (float)_maximoImpactos;
+        float impactosRecibidos = (float)_impactosRecibidos;
         UpdateProgressSalud(impactosRecibidos, maximoImpactos);
     }
 
     public void pararSonido()
     {
-        audioSource.Pause();       
+        audioSource.Pause();
     }
 
     public void mostrarDocumento(float cantDocObtenido, float total)//QUE SE RECIBE!!!
     {
         if (cantDocObtenido >= total && copiandoDoc == true)
-        {            
+        {
             textoLlevoDocumento.text = "OK";//
 
             if (audioSource != null && ok != null)
@@ -120,7 +118,7 @@ public class Inventario : NetworkBehaviour
                 audioSource.volume = 1f;
                 audioSource.Play();
             }
-            documentoCopiado = true;            
+            documentoCopiado = true;
             copiandoDoc = false;
         }
 
@@ -137,6 +135,11 @@ public class Inventario : NetworkBehaviour
         }
     }
 
+    public void resetearDatosTransmisionCortada()
+    {
+        UpdateProgressTrans(0, 100f);
+    }
+
     public void resetearDatos()
     {
         transmitiendo = false;
@@ -150,7 +153,7 @@ public class Inventario : NetworkBehaviour
 
     public void mostrarTransmision(float cantTransmisionEmitida, float TotalTransmision)
     {
-        if (cantTransmisionEmitida >= TotalTransmision-1 && transmitiendo == true)
+        if (cantTransmisionEmitida >= TotalTransmision - 1 && transmitiendo == true)
         {
             textoTransmision.text = "OK";
             if (audioSource != null && ok != null)
@@ -164,8 +167,8 @@ public class Inventario : NetworkBehaviour
             documentoTransmitido = true;
         }
         //IMPLEMENTAR BARRA PROGRESO
-        UpdateProgressTrans(cantTransmisionEmitida,TotalTransmision);
-        if ( transmitiendo == false && cantTransmisionEmitida > 0 && !documentoTransmitido)
+        UpdateProgressTrans(cantTransmisionEmitida, TotalTransmision);
+        if (transmitiendo == false && cantTransmisionEmitida > 0 && !documentoTransmitido)
         {
             transmitiendo = true;
             if (audioSource != null && transmision != null)
@@ -173,7 +176,7 @@ public class Inventario : NetworkBehaviour
                 audioSource.volume = 0.2f;
                 audioSource.clip = transmision;
                 audioSource.Play();
-            }           
+            }
         }
     }
 
@@ -181,12 +184,13 @@ public class Inventario : NetworkBehaviour
     // Método para actualizar la barra de progreso
 
     private void UpdateProgressSalud(float impactosRecibidos, float totalPermitidos)
-    {      
+    {
         currentValueSalud = Mathf.Clamp(impactosRecibidos, 0, totalPermitidos);
         fillBarSalud.fillAmount = 1f - (currentValueSalud / totalPermitidos);
     }
 
-    private void UpdateProgressDoc(float current, float maxValue) { 
+    private void UpdateProgressDoc(float current, float maxValue)
+    {
         currentValueDoc = Mathf.Clamp(current, 0, maxValue); // Asegura que esté dentro del rango
         fillBarDoc.fillAmount = currentValueDoc / maxValue; // Calcula el porcentaje
     }
@@ -195,7 +199,4 @@ public class Inventario : NetworkBehaviour
         currentValueTrans = Mathf.Clamp(current, 0, maxValue); // Asegura que esté dentro del rango
         fillBarTrans.fillAmount = currentValueTrans / maxValue; // Calcula el porcentaje
     }
-
-// Update is called once per frame
-
 }
